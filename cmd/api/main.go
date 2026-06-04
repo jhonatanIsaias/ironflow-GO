@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
-	// Substitua pelo caminho real do seu projeto!
+
 	"ironflow/internal/database"
 	"ironflow/internal/handler"
 	"ironflow/internal/repository"
@@ -26,10 +26,11 @@ func main() {
 
 	exercicioRepository := repository.NovoExercicioRepository(database.DB)
 	treinoRepository := repository.NovoTreinoRepository(database.DB)
+	fichaTrinoRepository := repository.NovoFichaTreinoRepository(database.DB)
 
 	treinoHandler := handler.NovoTreinoHandler(treinoRepository)
 	exercicioHandler := handler.NovoExercicioHandler(exercicioRepository)
-
+	fichaTreinoHandler := handler.NovoFichaTreinoHandler(fichaTrinoRepository)
 
 	router := gin.Default()
 
@@ -43,6 +44,14 @@ func main() {
 	router.GET("/treinos/:treNrId", treinoHandler.BuscarPorID)
 	router.GET("/treinos", treinoHandler.BuscarTodos)
 	router.DELETE("/treinos/:treNrId", treinoHandler.DeletarPorID)
+
+	router.POST("/fichas", fichaTreinoHandler.SalvarFichaTreino)
+	router.PUT("/fichas/:fitNrId", fichaTreinoHandler.EditarFichaTreino)
+	router.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
+	router.GET("/fichas/:treNrId", fichaTreinoHandler.BuscarTodos)
+	router.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
+
+
 
 	router.Run(":8080")
 }

@@ -48,7 +48,7 @@ func main() {
 	router.POST("/fichas", fichaTreinoHandler.SalvarFichaTreino)
 	router.PUT("/fichas/:fitNrId", fichaTreinoHandler.EditarFichaTreino)
 	router.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
-	router.GET("/fichas/:treNrId", fichaTreinoHandler.BuscarTodos)
+	router.GET("/fichas", fichaTreinoHandler.BuscarTodos)
 	router.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
 
 

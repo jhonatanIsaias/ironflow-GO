@@ -7,8 +7,9 @@ type FichaTreino struct {
 	ExeNrID             int     `json:"exeNrId" db:"exe_nr_id"` 
 	FitNrOrdem          int     `json:"fitNrOrdem" db:"fit_nr_ordem"`
 	FitNrMetaSeries     int     `json:"fitNrMetaSeries" db:"fit_nr_meta_series"`
-	FitNrMetaRepeticoes int     `json:"fitNrMetaRepeticoes" db:"fit_nr_meta_repeticoes"`
+	FitTxMetaRepeticoes string  `json:"fitTxMetaRepeticoes" db:"fit_tx_meta_repeticoes"`
 	FitNrMetaPeso       float64 `json:"fitNrMetaPeso" db:"fit_nr_meta_peso"`
+	FitNrGrupo          int     `json:"fitNrGrupo" db:"fit_nr_grupo"`
 }
 
 type FichaTreinoResponse struct {
@@ -18,6 +19,7 @@ type FichaTreinoResponse struct {
     ExeTxNome           string  `json:"exeTxNome"` 
     FitNrOrdem          int     `json:"fitNrOrdem"`
     FitNrMetaSeries     int     `json:"fitNrMetaSeries"`
-    FitNrMetaRepeticoes int     `json:"fitNrMetaRepeticoes"`
+    FitTxMetaRepeticoes string  `json:"fitTxMetaRepeticoes"`
     FitNrMetaPeso       float64 `json:"fitNrMetaPeso"`
+    FitNrGrupo          int     `json:"fitNrGrupo"`
 }

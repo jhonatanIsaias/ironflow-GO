@@ -89,6 +89,15 @@ func (h *ExercicioHandler) BuscarPorID(c *gin.Context) {
 	c.JSON(http.StatusOK, exercicio)
 }
 
+func (h *ExercicioHandler) BuscarTodos(c *gin.Context) {
+	exercicios, err := h.ExercicioRepository.BuscarTodos(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar exercícios"})
+		return
+	}
+	c.JSON(http.StatusOK, exercicios)
+}
+
 func (h *ExercicioHandler) DeletarPorID(c *gin.Context) {
 	exeNrId := c.Param("exeNrId")
 

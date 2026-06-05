@@ -18,16 +18,17 @@ func NovoFichaTreinoRepository(db *pgxpool.Pool) *FichaTreinoRepository {
 
 func (r *FichaTreinoRepository) Salvar(c context.Context, fichaTreino *model.FichaTreino) error {
 	
-	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_nr_meta_repeticoes, fit_nr_meta_peso)
-	VALUES ($1, $2, $3, $4, $5, $6) RETURNING fit_nr_id,created_at,updated_at`
+	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_nr_meta_repeticoes, fit_nr_meta_peso, fit_nr_grupo)
+	VALUES ($1, $2, $3, $4, $5, $6,$7) RETURNING fit_nr_id,created_at,updated_at`
 
 	err := r.DB.QueryRow(c, sql, 
 		fichaTreino.TreNrID, 
 		fichaTreino.ExeNrID, 
 		fichaTreino.FitNrOrdem, 
 		fichaTreino.FitNrMetaSeries, 
-		fichaTreino.FitNrMetaRepeticoes, 
+		fichaTreino.FitTxMetaRepeticoes, 
 		fichaTreino.FitNrMetaPeso,
+		fichaTreino.FitNrGrupo,
 		).Scan(
 			&fichaTreino.FitNrID,
 			&fichaTreino.CreatedAt,
@@ -49,6 +50,7 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 	fit_nr_meta_series = $3, 
 	fit_nr_meta_repeticoes = $4, 
 	fit_nr_meta_peso = $5, 
+	fit_nr_grupo = $6,
 	updated_at = NOW() 
 	WHERE fit_nr_id = $1 and deleted_at IS NULL
 	RETURNING created_at,updated_at`
@@ -57,8 +59,9 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 		fichaTreino.FitNrID,
 		fichaTreino.FitNrOrdem,
 		fichaTreino.FitNrMetaSeries,
-		fichaTreino.FitNrMetaRepeticoes,
+		fichaTreino.FitTxMetaRepeticoes,
 		fichaTreino.FitNrMetaPeso,
+		fichaTreino.FitNrGrupo,
 	).Scan(
 		&fichaTreino.CreatedAt,
 		&fichaTreino.UpdatedAt,
@@ -76,7 +79,7 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 
 func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int) (*model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_nr_meta_repeticoes, f.fit_nr_meta_peso
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_nr_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	WHERE f.deleted_at IS NULL AND f.fit_nr_id = $1
@@ -89,8 +92,9 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int) (*mo
 		&ficha.ExeTxNome,
 		&ficha.FitNrOrdem,
 		&ficha.FitNrMetaSeries,
-		&ficha.FitNrMetaRepeticoes,
+		&ficha.FitTxMetaRepeticoes,
 		&ficha.FitNrMetaPeso,
+		&ficha.FitNrGrupo,
 	)
 	if err != nil {
 		return nil, err
@@ -101,7 +105,7 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int) (*mo
 
 func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTxNome string) ([]model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_nr_meta_repeticoes, f.fit_nr_meta_peso
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	AND f.deleted_at IS NULL AND f.tre_nr_id = $1 AND (e.exe_tx_nome <> '' AND e.exe_tx_nome ILIKE $2)
@@ -124,8 +128,9 @@ func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTx
 			&ficha.ExeTxNome,
 			&ficha.FitNrOrdem,
 			&ficha.FitNrMetaSeries,
-			&ficha.FitNrMetaRepeticoes,
+			&ficha.FitTxMetaRepeticoes,
 			&ficha.FitNrMetaPeso,
+			&ficha.FitNrGrupo,
 		); err != nil {
 			return nil, err
 		}
@@ -136,10 +141,18 @@ func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTx
 
 }
 
-func (r *FichaTreinoRepository) Deletar(c context.Context, fitNrID int) error {
+func (r *FichaTreinoRepository) Deletar(ctx context.Context, fitNrID int) error {
+
+	tx,err := r.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback(ctx);
+	
 	
 	sql := `UPDATE treino.fit_ficha_treino SET deleted_at = NOW() WHERE fit_nr_id = $1 AND deleted_at IS NULL`
-	result, err := r.DB.Exec(c, sql, fitNrID)
+	result, err := tx.Exec(ctx, sql, fitNrID)
 	if err != nil {
 		return err
 	}
@@ -147,7 +160,10 @@ func (r *FichaTreinoRepository) Deletar(c context.Context, fitNrID int) error {
 	if rowsAffected == 0 {
 		return errors.New("Não é possível deletar: Ficha de treino inexistente ou já deletada")
 	}
-	return nil
+	
+	return tx.Commit(ctx)
+
+
 }
 
 func (r *FichaTreinoRepository) ExisteExercicioNoTreino(ctx context.Context,treNrId int, exeNrId int) (bool,error){

@@ -3,9 +3,14 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" 
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 
@@ -37,4 +42,24 @@ func Fechar() {
 	if DB != nil {
 		DB.Close()
 	}
+}
+
+
+func RodarMigrations() {
+	dbUrl := os.Getenv("DATABASE_URL") 
+	
+	m, err := migrate.New(
+		"file://db/migration", 
+		dbUrl,
+	)
+	if err != nil {
+		log.Fatalf("Falha ao preparar migrations: %v", err)
+	}
+
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Falha ao executar migrations: %v", err)
+	}
+
+	log.Println("Migrations verificadas/executadas com sucesso!")
 }

@@ -24,6 +24,8 @@ func main() {
 	}
 	defer database.Fechar()
 
+	database.RodarMigrations()
+
 	exercicioRepository := repository.NovoExercicioRepository(database.DB)
 	treinoRepository := repository.NovoTreinoRepository(database.DB)
 	fichaTrinoRepository := repository.NovoFichaTreinoRepository(database.DB)
@@ -36,6 +38,7 @@ func main() {
 
 	router.POST("/exercicios", exercicioHandler.CriarExercicio)
 	router.GET("/exercicios/:exeNrId", exercicioHandler.BuscarPorID)
+	router.GET("/exercicios", exercicioHandler.BuscarTodos)
 	router.PUT("/exercicios", exercicioHandler.EditarExercicio)
 	router.DELETE("/exercicios/:exeNrId", exercicioHandler.DeletarPorID)
 
@@ -50,7 +53,6 @@ func main() {
 	router.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
 	router.GET("/fichas", fichaTreinoHandler.BuscarTodos)
 	router.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
-
 
 
 	router.Run(":8080")

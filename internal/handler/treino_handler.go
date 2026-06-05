@@ -15,7 +15,7 @@ type ITreinoRepository interface {
 	Editar(ctx context.Context, t *model.Treino) error
 	BuscarPorID(ctx context.Context, id int) (*model.Treino, error)
 	BuscarTodos(ctx context.Context, treTxNome string) ([]model.Treino, error)
-	Deletar(ctx context.Context, id int) error
+	DeletarE_Fichas(ctx context.Context, id int) error
 }
 
 type TreinoHandler struct {
@@ -110,7 +110,7 @@ func (h *TreinoHandler) DeletarPorID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID inválido. Deve ser um número."})
 		return
 	}
-	err = h.TreinoRepository.Deletar(c, id)
+	err = h.TreinoRepository.DeletarE_Fichas(c, id)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Treino não encontrado"})

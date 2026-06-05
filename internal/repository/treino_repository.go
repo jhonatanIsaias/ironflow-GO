@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,13 +13,6 @@ import (
 
 type TreinoRepository struct {
 	DB *pgxpool.Pool
-	TreinoRepository interface {
-		Salvar(ctx context.Context, t *model.Treino) error
-		Editar(ctx context.Context, t *model.Treino) error
-		BuscarTodos(ctx context.Context, treTxNome string) ([]model.Treino, error)
-		BuscarPorID(ctx context.Context, treNrId int) (*model.Treino, error)
-		Deletar(ctx context.Context, id int) error
-	}
 }
 
 func NovoTreinoRepository(db *pgxpool.Pool) *TreinoRepository {
@@ -120,14 +114,31 @@ func (r *TreinoRepository) BuscarPorID(ctx context.Context, treNrID int) (*model
 	return &t, nil
 }
 
-func (r *TreinoRepository) Deletar(ctx context.Context, id int) error {
+func (r *TreinoRepository) DeletarE_Fichas(ctx context.Context, id int) error {
+
+	tx,err := r.DB.Begin(ctx);
+
+	if err != nil {
+		return fmt.Errorf("falha ao iniciar transação: %w", err)
+	}
+
+	defer tx.Rollback(ctx)
+
+
 	sql := `UPDATE treino.tre_treino SET deleted_at = NOW() WHERE tre_nr_id = $1`
-	comando, err := r.DB.Exec(ctx, sql, id)
+	comando, err := tx.Exec(ctx, sql, id)
 	if err != nil {
 		return err
 	}
 	if comando.RowsAffected() == 0 {
 		return errors.New("Não é possível deletar: Treino inexistente")
 	}
-	return nil
+
+	sqlFichas := `UPDATE treino.fit_ficha_treino SET deleted_at = NOW() WHERE tre_nr_id = $1 AND deleted_at IS NULL`
+	_, err = tx.Exec(ctx, sqlFichas, id)
+	
+	if err != nil {
+		return err 
+	}
+	return tx.Commit(ctx)
 }

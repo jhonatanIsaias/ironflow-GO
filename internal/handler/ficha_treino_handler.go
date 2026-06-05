@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"ironflow/internal/model"
 	"ironflow/internal/repository"
 	"net/http"
@@ -16,6 +17,7 @@ type IFichaTreinoRepository interface {
 	BuscarPorID(ctx context.Context, id int) (*model.FichaTreinoResponse, error)
 	BuscarTodos(ctx context.Context, treNrID int, exeTxNome string) ([]model.FichaTreinoResponse, error)
 	Deletar(ctx context.Context, id int) error
+	ExisteExercicioNoTreino(ctx context.Context,treNrId int, exeNrId int) (bool,error)
 }
 
 type FichaTreinoHandler struct {
@@ -41,7 +43,21 @@ func (fit *FichaTreinoHandler) SalvarFichaTreino(c *gin.Context){
 		return
 	}
 
-	err:= fit.FichaTreinoRepository.Salvar(c,&ficha)
+	 exist,err := fit.FichaTreinoRepository.ExisteExercicioNoTreino(c,ficha.TreNrID,ficha.ExeNrID)
+		
+	 if exist {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Falha interna ao validar o exercício"})
+		return
+	 }
+
+	 if err != nil {
+		fmt.Printf("Erro ao checar exercício na ficha: %v\n", err) 
+		
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Falha interna ao validar o exercício"})
+		return
+	 }
+
+	err = fit.FichaTreinoRepository.Salvar(c,&ficha)
 
 	if(err != nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar a ficha"})
@@ -66,7 +82,7 @@ func (fit *FichaTreinoHandler) EditarFichaTreino(c *gin.Context){
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "Envie o ID para editar um nova ficha de treino"})
 		return
 	}
-
+	
 	err:= fit.FichaTreinoRepository.Editar(c,&ficha)
 
 	if(err != nil){

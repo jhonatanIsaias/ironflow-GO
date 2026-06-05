@@ -10,13 +10,6 @@ import (
 	"ironflow/internal/model" 
 )
 
-type IExercicioRepository interface {
-    Salvar(ctx context.Context, e *model.Exercicio) error
-    Editar(ctx context.Context, e *model.Exercicio) error
-    BuscarPorID(ctx context.Context, id int) (*model.Exercicio, error)
-    Deletar(ctx context.Context, id int) error
-}
-
 type ExercicioRepository struct {
 	DB *pgxpool.Pool
 }

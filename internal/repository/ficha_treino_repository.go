@@ -18,11 +18,10 @@ func NovoFichaTreinoRepository(db *pgxpool.Pool) *FichaTreinoRepository {
 
 func (r *FichaTreinoRepository) Salvar(c context.Context, fichaTreino *model.FichaTreino) error {
 	
-	sql := `INSERT INTO treino.fit_ficha_treino (fit_nr_id, tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_nr_meta_repeticoes, fit_nr_meta_peso)
-	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING fit_nr_id,created_at,updated_at`
+	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_nr_meta_repeticoes, fit_nr_meta_peso)
+	VALUES ($1, $2, $3, $4, $5, $6) RETURNING fit_nr_id,created_at,updated_at`
 
 	err := r.DB.QueryRow(c, sql, 
-		fichaTreino.FitNrID, 
 		fichaTreino.TreNrID, 
 		fichaTreino.ExeNrID, 
 		fichaTreino.FitNrOrdem, 
@@ -153,4 +152,27 @@ func (r *FichaTreinoRepository) Deletar(c context.Context, fitNrID int) error {
 		return errors.New("Não é possível deletar: Ficha de treino inexistente ou já deletada")
 	}
 	return nil
+}
+
+func (r *FichaTreinoRepository) ExisteExercicioNoTreino(ctx context.Context,treNrId int, exeNrId int) (bool,error){
+
+	sql := `
+	SELECT EXISTS (
+	SELECT 1	
+	FROM treino.fit_ficha_treino f
+	WHERE f.deleted_at IS NULL 
+	AND f.tre_nr_id = $1
+	AND f.exe_nr_id = $2
+	)
+  `
+  var exist bool
+
+	err := r.DB.QueryRow(ctx, sql, treNrId, exeNrId).Scan(
+		&exist,
+	)
+	if err != nil {
+		return false, err
+	}
+	return exist, nil
+
 }

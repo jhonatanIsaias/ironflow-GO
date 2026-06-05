@@ -45,24 +45,20 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 
 	sql := 
 	`UPDATE treino.fit_ficha_treino 
-	SET tre_nr_id = $1, 
-	exe_nr_id = $2, 
-	fit_nr_ordem = $3,
-	fit_nr_meta_series = $4, 
-	fit_nr_meta_repeticoes = $5, 
-	fit_nr_meta_peso = $6, 
+	SET fit_nr_ordem = $2,
+	fit_nr_meta_series = $3, 
+	fit_nr_meta_repeticoes = $4, 
+	fit_nr_meta_peso = $5, 
 	updated_at = NOW() 
-	WHERE fit_nr_id = $7 and deleted_at IS NULL
+	WHERE fit_nr_id = $1 and deleted_at IS NULL
 	RETURNING created_at,updated_at`
 
 	err := r.DB.QueryRow(c, sql,
-		fichaTreino.TreNrID, 
-		fichaTreino.ExeNrID,
+		fichaTreino.FitNrID,
 		fichaTreino.FitNrOrdem,
 		fichaTreino.FitNrMetaSeries,
 		fichaTreino.FitNrMetaRepeticoes,
 		fichaTreino.FitNrMetaPeso,
-		fichaTreino.FitNrID,
 	).Scan(
 		&fichaTreino.CreatedAt,
 		&fichaTreino.UpdatedAt,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"ironflow/internal/model"
-	"ironflow/internal/repository"
 	"net/http"
 	"strconv"
 
@@ -24,7 +23,7 @@ type FichaTreinoHandler struct {
 	FichaTreinoRepository IFichaTreinoRepository
 }
 
-func NovoFichaTreinoHandler(repo *repository.FichaTreinoRepository) *FichaTreinoHandler{
+func NovoFichaTreinoHandler(repo IFichaTreinoRepository) *FichaTreinoHandler{
 	return &FichaTreinoHandler{FichaTreinoRepository: repo }
 }
 

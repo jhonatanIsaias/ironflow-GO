@@ -9,3 +9,9 @@ type SessaoTreino struct {
 	SetDtData       time.Time `json:"setDtData" db:"set_dt_data"`
 	SetTmHoraInicio time.Time `json:"setTmHoraInicio" db:"set_tm_hora_inicio"`
 }
+
+
+type SessaoTreinoDetalhada struct {
+	SessaoTreino
+	TreTxNome string `json:"treTxNome"`
+}

@@ -29,10 +29,13 @@ func main() {
 	exercicioRepository := repository.NovoExercicioRepository(database.DB)
 	treinoRepository := repository.NovoTreinoRepository(database.DB)
 	fichaTrinoRepository := repository.NovoFichaTreinoRepository(database.DB)
+	serieExecutadaRepository := repository.NovoSerieExecutadaRepository(database.DB)
+	
 
 	treinoHandler := handler.NovoTreinoHandler(treinoRepository)
 	exercicioHandler := handler.NovoExercicioHandler(exercicioRepository)
 	fichaTreinoHandler := handler.NovoFichaTreinoHandler(fichaTrinoRepository)
+	serieExecutadaHandler := handler.NovoSerieExecutadaHandler(serieExecutadaRepository)
 
 	router := gin.Default()
 
@@ -53,6 +56,12 @@ func main() {
 	router.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
 	router.GET("/fichas", fichaTreinoHandler.BuscarTodos)
 	router.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
+
+	router.POST("/series", serieExecutadaHandler.SalvarSerieExecutada)
+	router.PUT("/series/:sexNrId", serieExecutadaHandler.EditarSerieExecutada)
+	//router.GET("/series/treino/:treNrId", serieExecutadaHandler.BuscarPorTreino)
+	router.GET("/series/sessao/:setNrId", serieExecutadaHandler.BuscarPorSessao)
+	router.DELETE("/series/:sexNrId", serieExecutadaHandler.DeletarSerieExecutada)
 
 
 	router.Run(":8080")

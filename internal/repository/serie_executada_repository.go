@@ -82,17 +82,16 @@ func (r *SerieExecutadaRepository) Editar(ctx context.Context, serie *model.Seri
 	
 	sql := `UPDATE treino.set_serie_executada
 	SET
-	fit_nr_id = $3, 
-	sex_nr_serie_numero = $4, 
-	sex_nr_peso_utilizado = $5, 
-	sex_tx_repeticoes_executadas = $6,
+	fit_nr_id = $2, 
+	sex_nr_serie_numero = $3, 
+	sex_nr_peso_utilizado = $4, 
+	sex_tx_repeticoes_executadas = $5,
 	updated_at = NOW()
 	WHERE sex_nr_id = $1 AND deleted_at IS NULL
 	RETURNING created_at, updated_at`
 
 	err := r.DB.QueryRow(ctx, sql,
 		serie.SexNrID,
-		serie.SetNrID, 
 		serie.FitNrID, 
 		serie.SexNrSerieNumero, 
 		serie.SexNrPesoUtilizado, 

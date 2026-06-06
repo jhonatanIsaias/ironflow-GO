@@ -26,7 +26,6 @@ type ISessaoTreinoRepository interface {
 
 type SerieExecutadaHandler struct {
 	serieExecutadaRepository ISerieExecutadaRepository
-	sessaoTreinoRepository ISessaoTreinoRepository
 }
 
 func NovoSerieExecutadaHandler(repo ISerieExecutadaRepository) *SerieExecutadaHandler {
@@ -58,4 +57,53 @@ func (h *SerieExecutadaHandler) SalvarSerieExecutada(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, serie)
+}
+
+func (h *SerieExecutadaHandler) EditarSerieExecutada(c *gin.Context) {
+
+	var serie model.SerieExecutada	
+	if err := c.ShouldBindJSON(&serie); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Corpo da requisição inválido"})
+		return
+	}
+
+	err := h.serieExecutadaRepository.Editar(c, &serie)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao editar série executada"})
+		return
+	}
+
+	c.JSON(http.StatusOK, serie)
+}
+
+func (h *SerieExecutadaHandler) BuscarPorSessao(c *gin.Context) {
+	id := c.Param("setNrId")
+	setNrId, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID da sessão inválido"})
+		return
+	}
+
+	series, err := h.serieExecutadaRepository.BuscarPorSessao(c, setNrId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar séries executadas"})
+		return
+	}
+
+	c.JSON(http.StatusOK, series)
+}
+
+func (h *SerieExecutadaHandler) DeletarSerieExecutada(c *gin.Context) {
+	id := c.Param("sexNrId")
+	sexNrId, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID da série executada inválido"})
+		return
+	}
+	err = h.serieExecutadaRepository.Deletar(c, sexNrId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao deletar série executada"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Série executada deletada com sucesso"})
 }

@@ -18,7 +18,6 @@ func NovoSerieExecutadaRepository(db *pgxpool.Pool) *SerieExecutadaRepository {
 	return &SerieExecutadaRepository{DB: db}
 }
 
-// No arquivo serie_executada_repository.go
 
 func (r *SerieExecutadaRepository) RegistrarSerieComSessaoAutomatica(ctx context.Context, serie *model.SerieExecutada,treNrId int) error {
 

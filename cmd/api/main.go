@@ -41,36 +41,41 @@ func main() {
 
 	router := gin.Default()
 
-	router.POST("/login", usuarioHandler.Login)
-	router.POST("/usuarios", usuarioHandler.SalvarUsuario)
-	
-	protected := router.Group("/")
-	protected.Use(middleware.RequireAuth()) 
+    v1 := router.Group("/api/v1")
 
-	router.POST("/exercicios", exercicioHandler.CriarExercicio)
-	router.GET("/exercicios/:exeNrId", exercicioHandler.BuscarPorID)
-	router.GET("/exercicios", exercicioHandler.BuscarTodos)
-	router.PUT("/exercicios", exercicioHandler.EditarExercicio)
-	router.DELETE("/exercicios/:exeNrId", exercicioHandler.DeletarPorID)
+    v1.POST("/login", usuarioHandler.Login)
+    v1.POST("/usuarios", usuarioHandler.SalvarUsuario)
 
-	router.POST("/treinos", treinoHandler.CriarTreino)
-	router.PUT("/treinos/:treNrId", treinoHandler.EditarTreino)
-	router.GET("/treinos/:treNrId", treinoHandler.BuscarPorID)
-	router.GET("/treinos", treinoHandler.BuscarTodos)
-	router.DELETE("/treinos/:treNrId", treinoHandler.DeletarPorID)
+    protected := v1.Group("/")
+    protected.Use(middleware.RequireAuth()) 
+    {
+        // EXERCÍCIOS
+        protected.POST("/exercicios", exercicioHandler.CriarExercicio)
+        protected.GET("/exercicios/:exeNrId", exercicioHandler.BuscarPorID)
+        protected.GET("/exercicios", exercicioHandler.BuscarTodos)
+        protected.PUT("/exercicios", exercicioHandler.EditarExercicio)
+        protected.DELETE("/exercicios/:exeNrId", exercicioHandler.DeletarPorID)
 
-	router.POST("/fichas", fichaTreinoHandler.SalvarFichaTreino)
-	router.PUT("/fichas/:fitNrId", fichaTreinoHandler.EditarFichaTreino)
-	router.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
-	router.GET("/fichas", fichaTreinoHandler.BuscarTodos)
-	router.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
+        // TREINOS
+        protected.POST("/treinos", treinoHandler.CriarTreino)
+        protected.PUT("/treinos/:treNrId", treinoHandler.EditarTreino)
+        protected.GET("/treinos/:treNrId", treinoHandler.BuscarPorID)
+        protected.GET("/treinos", treinoHandler.BuscarTodos)
+        protected.DELETE("/treinos/:treNrId", treinoHandler.DeletarPorID)
 
-	router.POST("/series", serieExecutadaHandler.SalvarSerieExecutada)
-	router.PUT("/series/:sexNrId", serieExecutadaHandler.EditarSerieExecutada)
-	//router.GET("/series/treino/:treNrId", serieExecutadaHandler.BuscarPorTreino)
-	router.GET("/series/sessao/:setNrId", serieExecutadaHandler.BuscarPorSessao)
-	router.DELETE("/series/:sexNrId", serieExecutadaHandler.DeletarSerieExecutada)
+        // FICHAS
+        protected.POST("/fichas", fichaTreinoHandler.SalvarFichaTreino)
+        protected.PUT("/fichas/:fitNrId", fichaTreinoHandler.EditarFichaTreino)
+        protected.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
+        protected.GET("/fichas", fichaTreinoHandler.BuscarTodos)
+        protected.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
 
+        // SÉRIES
+        protected.POST("/series", serieExecutadaHandler.SalvarSerieExecutada)
+        protected.PUT("/series/:sexNrId", serieExecutadaHandler.EditarSerieExecutada)
+        protected.GET("/series/sessao/:setNrId", serieExecutadaHandler.BuscarPorSessao)
+        protected.DELETE("/series/:sexNrId", serieExecutadaHandler.DeletarSerieExecutada)
+    }
 
 	router.Run(":8080")
 }

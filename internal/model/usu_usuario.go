@@ -19,7 +19,6 @@ type UsuarioRequest struct {
 
 type UsuarioResponse struct {
 	BaseEntity
-	UsuTxId    uuid.UUID `json:"usuTxId"`
 	UsuTxNome  string    `json:"usuTxNome"`
 	UsuTxEmail string    `json:"usuTxEmail"`
 }

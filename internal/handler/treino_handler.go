@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"ironflow/internal/model"
-	"ironflow/internal/repository"
 	"net/http"
 	"strconv"
 
@@ -11,18 +10,18 @@ import (
 )
 
 type ITreinoRepository interface {
-	Salvar(ctx context.Context, t *model.Treino) error
-	Editar(ctx context.Context, t *model.Treino) error
-	BuscarPorID(ctx context.Context, id int) (*model.Treino, error)
-	BuscarTodos(ctx context.Context, treTxNome string) ([]model.Treino, error)
-	DeletarE_Fichas(ctx context.Context, id int) error
+	Salvar(ctx context.Context, t *model.Treino, usuTxId string) error
+	Editar(ctx context.Context, t *model.Treino, usuTxId string) error
+	BuscarPorID(ctx context.Context, id int, usuTxId string) (*model.Treino, error)
+	BuscarTodos(ctx context.Context, treTxNome string, usuTxId string) ([]model.Treino, error)
+	DeletarE_Fichas(ctx context.Context, id int, usuTxId string) error
 }
 
 type TreinoHandler struct {
 	TreinoRepository ITreinoRepository
 }
 
-func NovoTreinoHandler(repo *repository.TreinoRepository) *TreinoHandler {
+func NovoTreinoHandler(repo ITreinoRepository) *TreinoHandler {
 	return &TreinoHandler{TreinoRepository: repo}
 }
 
@@ -38,7 +37,9 @@ func (h *TreinoHandler) CriarTreino(c *gin.Context) {
 		return
 	}
 
-	err := h.TreinoRepository.Salvar(c, &t)
+	usuTxId := c.GetString("usuTxId")
+
+	err := h.TreinoRepository.Salvar(c, &t, usuTxId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar o treino"})
 		return
@@ -60,7 +61,9 @@ func (h *TreinoHandler) EditarTreino(c *gin.Context) {
 		return
 	}
 
-	err := h.TreinoRepository.Editar(c, &t)
+	usuTxId := c.GetString("usuTxId")
+
+	err := h.TreinoRepository.Editar(c, &t, usuTxId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao editar o treino"})
 		return
@@ -79,7 +82,10 @@ func (h *TreinoHandler) BuscarPorID(c *gin.Context) {
 		return
 	}
 
-	treino, err := h.TreinoRepository.BuscarPorID(c, id)
+	usuTxId := c.GetString("usuTxId")
+
+	treino, err := h.TreinoRepository.BuscarPorID(c, id, usuTxId)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": err.Error()})
 		return
@@ -91,8 +97,10 @@ func (h *TreinoHandler) BuscarPorID(c *gin.Context) {
 func (h *TreinoHandler) BuscarTodos(c *gin.Context) {
 
 	treTxNome := c.Query("treTxNome")
+	
+	usuTxId := c.GetString("usuTxId")
 
-	treinos, err := h.TreinoRepository.BuscarTodos(c, treTxNome)
+	treinos, err := h.TreinoRepository.BuscarTodos(c, treTxNome, usuTxId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar treinos"})
 		return
@@ -110,7 +118,10 @@ func (h *TreinoHandler) DeletarPorID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID inválido. Deve ser um número."})
 		return
 	}
-	err = h.TreinoRepository.DeletarE_Fichas(c, id)
+	
+	usuTxId := c.GetString("usuTxId")
+
+	err = h.TreinoRepository.DeletarE_Fichas(c, id, usuTxId)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Treino não encontrado"})

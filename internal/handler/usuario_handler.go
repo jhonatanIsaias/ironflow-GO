@@ -28,14 +28,14 @@ func (h *UsuarioHandler) SalvarUsuario(c *gin.Context) {
 
 	var usuarioRequest model.UsuarioRequest
 	if err := c.ShouldBindJSON(&usuarioRequest); err != nil {
-		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Failed to bind request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to bind request"})
 		return
 	}
 
 	usuTxSenhaHash,err := security.HashPassword(usuarioRequest.UsuTxSenha)
 	
 	if err != nil {
-		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Failed to hash password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *UsuarioHandler) SalvarUsuario(c *gin.Context) {
 
 	err = h.usuarioRepository.Salvar(c, &usuarioRequest)
 	if err != nil {
-		 c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Failed to save user"})
+		 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		 return
 	}
 

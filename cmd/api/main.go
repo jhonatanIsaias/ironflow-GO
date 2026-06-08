@@ -58,21 +58,21 @@ func main() {
 
         // TREINOS
         protected.POST("/treinos", treinoHandler.CriarTreino)
-        protected.PUT("/treinos/:treNrId", treinoHandler.EditarTreino)
+        protected.PUT("/treinos", treinoHandler.EditarTreino)
         protected.GET("/treinos/:treNrId", treinoHandler.BuscarPorID)
         protected.GET("/treinos", treinoHandler.BuscarTodos)
         protected.DELETE("/treinos/:treNrId", treinoHandler.DeletarPorID)
 
         // FICHAS
         protected.POST("/fichas", fichaTreinoHandler.SalvarFichaTreino)
-        protected.PUT("/fichas/:fitNrId", fichaTreinoHandler.EditarFichaTreino)
+        protected.PUT("/fichas", fichaTreinoHandler.EditarFichaTreino)
         protected.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
         protected.GET("/fichas", fichaTreinoHandler.BuscarTodos)
         protected.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
 
         // SÉRIES
         protected.POST("/series", serieExecutadaHandler.SalvarSerieExecutada)
-        protected.PUT("/series/:sexNrId", serieExecutadaHandler.EditarSerieExecutada)
+        protected.PUT("/series", serieExecutadaHandler.EditarSerieExecutada)
         protected.GET("/series/sessao/:setNrId", serieExecutadaHandler.BuscarPorSessao)
         protected.DELETE("/series/:sexNrId", serieExecutadaHandler.DeletarSerieExecutada)
     }

@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
-
 	"ironflow/internal/database"
 	"ironflow/internal/handler"
+	"ironflow/internal/middleware"
 	"ironflow/internal/repository"
 )
 
@@ -26,18 +26,26 @@ func main() {
 
 	database.RodarMigrations()
 
+	usuarioRepository := repository.NovoUsuarioRepository(database.DB)
 	exercicioRepository := repository.NovoExercicioRepository(database.DB)
 	treinoRepository := repository.NovoTreinoRepository(database.DB)
 	fichaTrinoRepository := repository.NovoFichaTreinoRepository(database.DB)
 	serieExecutadaRepository := repository.NovoSerieExecutadaRepository(database.DB)
-	
 
+	
+	usuarioHandler := handler.NovoUsuarioHandler(usuarioRepository)
 	treinoHandler := handler.NovoTreinoHandler(treinoRepository)
 	exercicioHandler := handler.NovoExercicioHandler(exercicioRepository)
 	fichaTreinoHandler := handler.NovoFichaTreinoHandler(fichaTrinoRepository)
 	serieExecutadaHandler := handler.NovoSerieExecutadaHandler(serieExecutadaRepository)
 
 	router := gin.Default()
+
+	router.POST("/login", usuarioHandler.Login)
+	router.POST("/usuarios", usuarioHandler.SalvarUsuario)
+	
+	protected := router.Group("/")
+	protected.Use(middleware.RequireAuth()) 
 
 	router.POST("/exercicios", exercicioHandler.CriarExercicio)
 	router.GET("/exercicios/:exeNrId", exercicioHandler.BuscarPorID)

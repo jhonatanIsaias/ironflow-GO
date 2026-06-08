@@ -77,15 +77,18 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 	return nil
 }
 
-func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int) (*model.FichaTreinoResponse, error) {
+func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int,usuTxID string) (*model.FichaTreinoResponse, error) {
 	sql := `
 	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
-	WHERE f.deleted_at IS NULL AND f.fit_nr_id = $1
+	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
+	WHERE f.deleted_at IS NULL 
+	AND f.fit_nr_id = $1
+	AND t.usu_tx_id = $2
 	`
 	var ficha model.FichaTreinoResponse
-	err := r.DB.QueryRow(c, sql, fitNrID).Scan(
+	err := r.DB.QueryRow(c, sql, fitNrID,usuTxID).Scan(
 		&ficha.FitNrID,
 		&ficha.TreNrID,
 		&ficha.ExeNrID,
@@ -105,15 +108,17 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int) (*mo
 }
 
 
-func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTxNome string) ([]model.FichaTreinoResponse, error) {
+func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTxNome string,usuTxId string) ([]model.FichaTreinoResponse, error) {
 	sql := `
 	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
+	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
 	AND f.deleted_at IS NULL AND f.tre_nr_id = $1 AND (e.exe_tx_nome <> '' AND e.exe_tx_nome ILIKE $2)
+	AND t.usu_tx_id = $3
 	ORDER BY f.fit_nr_ordem
 	`
-	rows, err := r.DB.Query(c, sql, treNrID, "%"+exeTxNome+"%")
+	rows, err := r.DB.Query(c, sql, treNrID, "%"+exeTxNome+"%",usuTxId)
 	if err != nil {
 		return nil, err
 	}
@@ -145,28 +150,33 @@ func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTx
 
 }
 
-func (r *FichaTreinoRepository) Deletar(ctx context.Context, fitNrID int) error {
+func (r *FichaTreinoRepository) Deletar(ctx context.Context, fitNrID int, usuTxId string) error {
 
-	tx,err := r.DB.Begin(ctx)
+	tx, err := r.DB.Begin(ctx)
 	if err != nil {
 		return err
 	}
 
-	defer tx.Rollback(ctx);
-	
-	
-	sql := `UPDATE treino.fit_ficha_treino SET deleted_at = NOW() WHERE fit_nr_id = $1 AND deleted_at IS NULL`
-	result, err := tx.Exec(ctx, sql, fitNrID)
+	defer tx.Rollback(ctx)
+
+	sql := `UPDATE treino.fit_ficha_treino f
+	SET deleted_at = NOW()
+	FROM treino.tre_treino t
+	WHERE f.tre_nr_id = t.tre_nr_id
+	AND f.fit_nr_id = $1
+	AND f.deleted_at IS NULL
+	AND t.usu_tx_id = $2`
+
+	result, err := tx.Exec(ctx, sql, fitNrID, usuTxId)
 	if err != nil {
 		return err
 	}
 	rowsAffected := result.RowsAffected()
 	if rowsAffected == 0 {
-		return errors.New("Não é possível deletar: Ficha de treino inexistente ou já deletada")
+		return errors.New("Não é possível deletar: Ficha de treino inexistente, já deletada ou sem permissão")
 	}
 	
 	return tx.Commit(ctx)
-
 
 }
 

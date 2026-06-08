@@ -13,9 +13,9 @@ import (
 type IFichaTreinoRepository interface {
 	Salvar(ctx context.Context, t *model.FichaTreino) error
 	Editar(ctx context.Context, t *model.FichaTreino) error
-	BuscarPorID(ctx context.Context, id int) (*model.FichaTreinoResponse, error)
-	BuscarTodos(ctx context.Context, treNrID int, exeTxNome string) ([]model.FichaTreinoResponse, error)
-	Deletar(ctx context.Context, id int) error
+	BuscarPorID(ctx context.Context, id int, usuTxId string) (*model.FichaTreinoResponse, error)
+	BuscarTodos(ctx context.Context, treNrID int, exeTxNome string, usuTxId string) ([]model.FichaTreinoResponse, error)
+	Deletar(ctx context.Context, id int, usuTxId string) error
 	ExisteExercicioNoTreino(ctx context.Context,treNrId int, exeNrId int) (bool,error)
 }
 
@@ -121,8 +121,10 @@ func (fit *FichaTreinoHandler) BuscarPorID(c *gin.Context){
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID inválido. Deve ser um número."})
 		return
 	}
+	
+	usuTxId := c.GetString("usuTxId")
 
-	fichaTreno,err := fit.FichaTreinoRepository.BuscarPorID(c,fitNrId);
+	fichaTreno,err := fit.FichaTreinoRepository.BuscarPorID(c,fitNrId,usuTxId);
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": err.Error()})
@@ -146,7 +148,9 @@ func (fit *FichaTreinoHandler) BuscarTodos(c *gin.Context){
 		return
 	}
 
-	fichas,err := fit.FichaTreinoRepository.BuscarTodos(c,treNrId,exeTxNome);
+	usuTxId := c.GetString("usuTxId")
+
+	fichas,err := fit.FichaTreinoRepository.BuscarTodos(c,treNrId,exeTxNome,usuTxId);
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar treinos"})
@@ -167,7 +171,10 @@ func (fit *FichaTreinoHandler) DeletarPorID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID inválido. Deve ser um número."})
 		return
 	}
-	err = fit.FichaTreinoRepository.Deletar(c, fitNrId)
+	
+	usuTxId := c.GetString("usuTxId")
+
+	err = fit.FichaTreinoRepository.Deletar(c, fitNrId, usuTxId)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ficha não encontrada"})

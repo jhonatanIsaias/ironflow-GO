@@ -44,7 +44,8 @@ func (r *SessaoTreinoRepository) Salvar(ctx context.Context, sessao *model.Sessa
 
 func (r *SessaoTreinoRepository) BuscarPorFiltros(
 	ctx context.Context,
-	treNrId int, 
+	treNrId int,
+	usuTxId string, 
 	dataInicio time.Time,
 	dataFim time.Time,
 	horaInicio time.Time,
@@ -52,12 +53,13 @@ func (r *SessaoTreinoRepository) BuscarPorFiltros(
 
 	sql := `
 		SELECT set_nr_id, tre_nr_id, set_dt_data, set_tm_hora_inicio, tre.tre_tx_nome, created_at, updated_at
-		FROM treino.set_sessao_treino
-		INNER JOIN treino.tre_treino ON set_sessao_treino.tre_nr_id = tre_treino.tre_nr_id
+		FROM treino.set_sessao_treino set
+		INNER JOIN treino.tre_treino tre ON set.tre_nr_id = tre.tre_nr_id
 		WHERE tre_nr_id = $1 AND deleted_at IS NULL
+		AND tre.usu_tx_id = $2
 	`
 
-	args := []any{treNrId}
+	args := []any{treNrId,usuTxId}
 
 	if !dataInicio.IsZero() {
 		args = append(args, dataInicio)
@@ -113,18 +115,20 @@ func (r *SessaoTreinoRepository) BuscarPorFiltros(
 	return sessoes, nil
 }
 
-func (r *SessaoTreinoRepository) ObterSessaoHoje(ctx context.Context, treNrId int) (int, bool, error) {
+func (r *SessaoTreinoRepository) ObterSessaoHoje(ctx context.Context, treNrId int, usuTxId string) (int, bool, error) {
 	sql := `
 		SELECT set_nr_id 
-		FROM treino.set_sessao_treino 
-		WHERE tre_nr_id = $1 
-		  AND set_dt_data = CURRENT_DATE 
-		  AND deleted_at IS NULL
+		FROM treino.set_sessao_treino set
+		INNER JOIN treino.tre_treino tre ON set.tre_nr_id = tre.tre_nr_id
+		WHERE set.tre_nr_id = $1 
+		  AND set.set_dt_data = CURRENT_DATE 
+		  AND set.deleted_at IS NULL
+		  AND tre.usu_tx_id = @2
 		LIMIT 1
 	`
 
 	var setNrID int
-	err := r.DB.QueryRow(ctx, sql, treNrId).Scan(&setNrID)
+	err := r.DB.QueryRow(ctx, sql, treNrId,usuTxId).Scan(&setNrID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return 0, false, nil

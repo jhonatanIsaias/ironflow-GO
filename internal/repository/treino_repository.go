@@ -102,7 +102,6 @@ func (r *TreinoRepository) BuscarPorID(ctx context.Context, treNrID int, usuTxId
         WHERE tre_nr_id = $1 
 		AND deleted_at IS NULL 
 		AND usu_tx_id = $2
-		and
     `
 
 	var t model.Treino

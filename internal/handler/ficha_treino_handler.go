@@ -21,10 +21,11 @@ type IFichaTreinoRepository interface {
 
 type FichaTreinoHandler struct {
 	FichaTreinoRepository IFichaTreinoRepository
+	TreinoRepository ITreinoRepository
 }
 
-func NovoFichaTreinoHandler(repo IFichaTreinoRepository) *FichaTreinoHandler{
-	return &FichaTreinoHandler{FichaTreinoRepository: repo }
+func NovoFichaTreinoHandler(repo IFichaTreinoRepository, treinoRepository ITreinoRepository) *FichaTreinoHandler{
+	return &FichaTreinoHandler{FichaTreinoRepository: repo, TreinoRepository: treinoRepository}
 }
 
 func (fit *FichaTreinoHandler) SalvarFichaTreino(c *gin.Context){
@@ -42,19 +43,27 @@ func (fit *FichaTreinoHandler) SalvarFichaTreino(c *gin.Context){
 		return
 	}
 
+	usuTxId := c.GetString("usuTxId")
+
+	_,err := fit.TreinoRepository.BuscarPorID(c,ficha.TreNrID,usuTxId)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	 exist,err := fit.FichaTreinoRepository.ExisteExercicioNoTreino(c,ficha.TreNrID,ficha.ExeNrID)
 		
-	 if exist {
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Falha interna ao validar o exercício"})
-		return
-	 }
-
 	 if err != nil {
-		fmt.Printf("Erro ao checar exercício na ficha: %v\n", err) 
-		
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Falha interna ao validar o exercício"})
+    	fmt.Printf("Erro ao checar exercício na ficha no banco: %v\n", err) 
+    	c.JSON(http.StatusInternalServerError, gin.H{"erro": "Falha interna ao validar o exercício"})
+    	return
+}
+
+	if exist {
+		c.JSON(http.StatusConflict, gin.H{"erro": "Este exercício já está cadastrado neste treino"})
 		return
-	 }
+	}
 
 	err = fit.FichaTreinoRepository.Salvar(c,&ficha)
 
@@ -81,8 +90,18 @@ func (fit *FichaTreinoHandler) EditarFichaTreino(c *gin.Context){
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "Envie o ID para editar um nova ficha de treino"})
 		return
 	}
+
+	usuTxId := c.GetString("usuTxId")
+
+	_,err := fit.TreinoRepository.BuscarPorID(c,ficha.TreNrID,usuTxId)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	
-	err:= fit.FichaTreinoRepository.Editar(c,&ficha)
+	err = fit.FichaTreinoRepository.Editar(c,&ficha)
 
 	if(err != nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao Editar a ficha"})

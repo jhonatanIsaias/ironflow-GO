@@ -36,7 +36,7 @@ func main() {
 	usuarioHandler := handler.NovoUsuarioHandler(usuarioRepository)
 	treinoHandler := handler.NovoTreinoHandler(treinoRepository)
 	exercicioHandler := handler.NovoExercicioHandler(exercicioRepository)
-	fichaTreinoHandler := handler.NovoFichaTreinoHandler(fichaTrinoRepository)
+	fichaTreinoHandler := handler.NovoFichaTreinoHandler(fichaTrinoRepository,treinoRepository)
 	serieExecutadaHandler := handler.NovoSerieExecutadaHandler(serieExecutadaRepository)
 
 	router := gin.Default()

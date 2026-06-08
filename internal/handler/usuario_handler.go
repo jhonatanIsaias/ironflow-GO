@@ -14,6 +14,7 @@ type IUsuarioRepository interface {
 	Salvar(ctx context.Context, usuario *model.UsuarioRequest) error
 	Editar(ctx context.Context, usuario *model.Usuario) error
 	BuscarPorEmail(ctx context.Context, usuTxEmail string) (*model.Usuario, error)
+	BuscarPorID(ctx context.Context, usuTxId string) (*model.Usuario, error)
 }
 
 type UsuarioHandler struct {
@@ -28,14 +29,14 @@ func (h *UsuarioHandler) SalvarUsuario(c *gin.Context) {
 
 	var usuarioRequest model.UsuarioRequest
 	if err := c.ShouldBindJSON(&usuarioRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to bind request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Corpo da requisição inválido"})
 		return
 	}
 
 	usuTxSenhaHash,err := security.HashPassword(usuarioRequest.UsuTxSenha)
 	
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criptograr senha"})
 		return
 	}
 
@@ -63,20 +64,21 @@ func (h *UsuarioHandler) EditarUsuario(c *gin.Context) {
 	var usuario model.UsuarioResponse
 
 	if err := c.ShouldBindJSON(&usuario); err != nil {
-		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Failed to bind request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Corpo da requisição inválido"})
 		return
 	}
 
-	 usuarioToEdit, err := h.usuarioRepository.BuscarPorEmail(c, usuario.UsuTxEmail)
+	usuTxId := c.GetString("usuTxId")
+	usuarioToEdit, err := h.usuarioRepository.BuscarPorID(c, usuTxId)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
 		return
 	}
 	err = h.usuarioRepository.Editar(c,usuarioToEdit)
 
 	if err != nil {
-		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Failed to edit user"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao editar usuário"})
 		return
 	}
 
@@ -93,24 +95,24 @@ func (h *UsuarioHandler) Login(c *gin.Context) {
 	var JWTRequest model.JWTRequest
 	
 	if err := c.ShouldBindJSON(&JWTRequest); err != nil {
-		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Failed to bind request"})
+		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Corpo da requisição inválido"})
 		return
 	}
 	usuario, err := h.usuarioRepository.BuscarPorEmail(c, JWTRequest.UsuTxEmail)
 
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "email ou senha Inválidos"})
 		return
 	}
 
 	if !security.CheckPasswordHash(JWTRequest.UsuTxSenha, usuario.UsuTxSenha) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "email ou senha Inválidos"})
 		return
 	}
 
 	token, err := security.GenerateJWT(usuario.UsuTxId, usuario.UsuTxEmail)
 	if err != nil {
-		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Failed to generate JWT"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao gerar JWT"})
 		return
 	}	
 

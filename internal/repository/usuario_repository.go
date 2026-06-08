@@ -55,3 +55,18 @@ func (r *UsuarioRepository) BuscarPorEmail(ctx context.Context, usuTxEmail strin
 	}
 	return &usuario, nil
 }
+
+func (r *UsuarioRepository) BuscarPorID(ctx context.Context, usuTxId string) (*model.Usuario, error) {
+	sql := `SELECT usu_tx_id, usu_tx_nome, usu_tx_email, usu_tx_senha FROM auth.usu_usuario WHERE usu_tx_id = $1 AND deleted_at IS NULL`
+	var usuario model.Usuario
+	err := r.DB.QueryRow(ctx, sql, usuTxId).Scan(
+		&usuario.UsuTxId,
+		&usuario.UsuTxNome,
+		&usuario.UsuTxEmail,
+		&usuario.UsuTxSenha,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &usuario, nil
+}

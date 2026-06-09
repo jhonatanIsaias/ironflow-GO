@@ -11,24 +11,24 @@ import (
 )
 
 type ISerieExecutadaRepository interface {
-	RegistrarSerieComSessaoAutomatica(ctx context.Context, serie *model.SerieExecutada,treNrId int) error
-	Editar(ctx context.Context, serie *model.SerieExecutada) error
-	BuscarPorFichaTreino(ctx context.Context, fitNrId int) ([]model.SerieExecutada, error)
-	BuscarPorSessao(ctx context.Context, setNrId int) ([]model.SerieExecutadaDetalhada, error)
-	Deletar(ctx context.Context, sexNrId int) error
+	RegistrarSerieComSessaoAutomatica(ctx context.Context, serie *model.SerieExecutada, treNrId int) error
+	Editar(ctx context.Context, serie *model.SerieExecutada, usuTxId string) error
+	BuscarPorFichaTreino(ctx context.Context, fitNrId int, usuTxId string) ([]model.SerieExecutada, error)
+	BuscarPorSessao(ctx context.Context, setNrId int, usuTxId string) ([]model.SerieExecutadaDetalhada, error)
+	Deletar(ctx context.Context, sexNrId int, usuTxId string) error
 }
 
 type ISessaoTreinoRepository interface {
 	Salvar(ctx context.Context, sessao *model.SessaoTreino) error
 	BuscarPorFiltros(
-		ctx context.Context, 
+		ctx context.Context,
 		treNrId int,
-		usuTxId string, 
+		usuTxId string,
 		dataInicio time.Time,
 		dataFim time.Time,
 		horaInicio time.Time,
 		horaFim time.Time) ([]model.SessaoTreinoDetalhada, error)
-	ObterSessaoHoje(ctx context.Context, treNrId int,usuTxId string) (int, bool, error)
+	ObterSessaoHoje(ctx context.Context, treNrId int, usuTxId string) (int, bool, error)
 }
 
 type SerieExecutadaHandler struct {
@@ -44,20 +44,20 @@ func (h *SerieExecutadaHandler) SalvarSerieExecutada(c *gin.Context) {
 	var serie model.SerieExecutada
 
 	if err := c.ShouldBindJSON(&serie); err != nil {
-	c.JSON(http.StatusBadRequest, gin.H{"erro": "Corpo da requisição inválido"})
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Corpo da requisição inválido"})
 		return
 	}
 
 	id := c.Param("treNrId")
 	treNrId, err := strconv.Atoi(id)
-	
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID do treino inválido"})
 		return
 	}
 
 	err = h.serieExecutadaRepository.RegistrarSerieComSessaoAutomatica(c, &serie, treNrId)
-	
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao registrar série executada"})
 		return
@@ -68,13 +68,19 @@ func (h *SerieExecutadaHandler) SalvarSerieExecutada(c *gin.Context) {
 
 func (h *SerieExecutadaHandler) EditarSerieExecutada(c *gin.Context) {
 
-	var serie model.SerieExecutada	
+	var serie model.SerieExecutada
 	if err := c.ShouldBindJSON(&serie); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "Corpo da requisição inválido"})
 		return
 	}
 
-	err := h.serieExecutadaRepository.Editar(c, &serie)
+	usuTxId, exists := c.Get("usuTxId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"erro": "Usuário não autenticado"})
+		return
+	}
+
+	err := h.serieExecutadaRepository.Editar(c, &serie, usuTxId.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao editar série executada"})
 		return
@@ -91,7 +97,13 @@ func (h *SerieExecutadaHandler) BuscarPorSessao(c *gin.Context) {
 		return
 	}
 
-	series, err := h.serieExecutadaRepository.BuscarPorSessao(c, setNrId)
+	usuTxId, exists := c.Get("usuTxId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"erro": "Usuário não autenticado"})
+		return
+	}
+
+	series, err := h.serieExecutadaRepository.BuscarPorSessao(c, setNrId, usuTxId.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar séries executadas"})
 		return
@@ -107,7 +119,14 @@ func (h *SerieExecutadaHandler) DeletarSerieExecutada(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID da série executada inválido"})
 		return
 	}
-	err = h.serieExecutadaRepository.Deletar(c, sexNrId)
+
+	usuTxId, exists := c.Get("usuTxId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"erro": "Usuário não autenticado"})
+		return
+	}
+
+	err = h.serieExecutadaRepository.Deletar(c, sexNrId, usuTxId.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao deletar série executada"})
 		return

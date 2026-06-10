@@ -22,7 +22,7 @@ func NovoTreinoRepository(db *pgxpool.Pool) *TreinoRepository {
 func (r *TreinoRepository) Salvar(ctx context.Context, t *model.Treino, usuTxId string) error {
 	sql := `
         INSERT INTO treino.tre_treino (tre_tx_nome, usu_tx_id, tre_tx_descricao)
-        VALUES ($1, $2) RETURNING tre_nr_id,created_at, updated_at`
+        VALUES ($1, $2,$3) RETURNING tre_nr_id,created_at, updated_at`
 
 	err := r.DB.QueryRow(ctx, sql, t.TreTxNome, usuTxId,t.TreTxDescricao).Scan(
 		&t.TreNrID,

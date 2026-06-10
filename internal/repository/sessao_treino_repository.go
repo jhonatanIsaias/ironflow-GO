@@ -23,12 +23,10 @@ func (r *SessaoTreinoRepository) Salvar(ctx context.Context, sessao *model.Sessa
 
 	sql := `
 		INSERT INTO treino.set_sessao_treino (tre_nr_id, set_dt_data, set_tm_hora_inicio)
-		VALUES ($1, $2, $3) RETURNING set_nr_id, created_at, updated_at`
+		VALUES ($1, CURRENT_DATE, CURRENT_TIME) RETURNING set_nr_id, created_at, updated_at`
 	
 	err := r.DB.QueryRow(ctx, sql,
 		sessao.TreNrID,
-		sessao.SetDtData,
-		sessao.SetTmHoraInicio,
 	).Scan(
 		&sessao.SetNrID,
 		&sessao.CreatedAt,

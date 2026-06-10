@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"ironflow/internal/model"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,14 +9,38 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-
 type SessaoTreinoHandler struct {
 	SessaoTreinoRepository ISessaoTreinoRepository
 }
 
 func NovoSessaoTreinoHandler(repo ISessaoTreinoRepository) *SessaoTreinoHandler {
 	return &SessaoTreinoHandler{SessaoTreinoRepository: repo}
+}
+
+func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
+	var sessao model.SessaoTreino
+
+	if err := c.ShouldBindJSON(&sessao); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Corpo da requisição inválido"})
+		return
+	}
+
+	if sessao.SetNrID != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Não envie o ID para criar uma nova sessão de treino"})
+		return
+	}
+
+	if sessao.TreNrID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId é obrigatório"})
+		return
+	}
+	err := h.SessaoTreinoRepository.Salvar(c, &sessao)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar a sessão de treino"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, sessao)
 }
 
 func (h *SessaoTreinoHandler) BuscarPorFiltros(c *gin.Context) {

@@ -11,7 +11,7 @@ import (
 )
 
 type ISerieExecutadaRepository interface {
-	RegistrarSerieComSessaoAutomatica(ctx context.Context, serie *model.SerieExecutada, treNrId int) error
+	RegistrarSerie(ctx context.Context, serie *model.SerieExecutada) error
 	Editar(ctx context.Context, serie *model.SerieExecutada, usuTxId string) error
 	BuscarPorFichaTreino(ctx context.Context, fitNrId int, usuTxId string) ([]model.SerieExecutada, error)
 	BuscarPorSessao(ctx context.Context, setNrId int, usuTxId string) ([]model.SerieExecutadaDetalhada, error)
@@ -19,7 +19,7 @@ type ISerieExecutadaRepository interface {
 }
 
 type ISessaoTreinoRepository interface {
-	Salvar(ctx context.Context, sessao *model.SessaoTreino) error
+	Salvar(ctx context.Context, sessao *model.SessaoTreino, treNrId int) error
 	BuscarPorFiltros(
 		ctx context.Context,
 		treNrId int,
@@ -48,15 +48,7 @@ func (h *SerieExecutadaHandler) SalvarSerieExecutada(c *gin.Context) {
 		return
 	}
 
-	id := c.Param("treNrId")
-	treNrId, err := strconv.Atoi(id)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID do treino inválido"})
-		return
-	}
-
-	err = h.serieExecutadaRepository.RegistrarSerieComSessaoAutomatica(c, &serie, treNrId)
+	err := h.serieExecutadaRepository.RegistrarSerie(c, &serie)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao registrar série executada"})

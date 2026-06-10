@@ -78,7 +78,7 @@ func main() {
 		protected.POST("/sessoes/:treNrId",sessaoTreinoHandler.CriarSessaoTreino)
 
 		// SÉRIES
-		protected.POST("/series", serieExecutadaHandler.SalvarSerieExecutada)
+		protected.POST("/series/:treNrId", serieExecutadaHandler.SalvarSerieExecutada)
 		protected.PUT("/series", serieExecutadaHandler.EditarSerieExecutada)
 		protected.GET("/series/sessao/:setNrId", serieExecutadaHandler.BuscarPorSessao)
 		protected.DELETE("/series/:sexNrId", serieExecutadaHandler.DeletarSerieExecutada)

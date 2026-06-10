@@ -2,11 +2,8 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"ironflow/internal/model"
-
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,7 +15,7 @@ func NovoSerieExecutadaRepository(db *pgxpool.Pool) *SerieExecutadaRepository {
 	return &SerieExecutadaRepository{DB: db}
 }
 
-func (r *SerieExecutadaRepository) RegistrarSerieComSessaoAutomatica(ctx context.Context, serie *model.SerieExecutada, treNrId int) error {
+func (r *SerieExecutadaRepository) RegistrarSerie(ctx context.Context, serie *model.SerieExecutada) error {
 
 	tx, err := r.DB.Begin(ctx)
 	if err != nil {
@@ -27,33 +24,6 @@ func (r *SerieExecutadaRepository) RegistrarSerieComSessaoAutomatica(ctx context
 
 	defer tx.Rollback(ctx)
 
-	var setNrID int
-
-	sqlBusca := `
-		SELECT set_nr_id 
-		FROM treino.set_sessao_treino set
-		WHERE set.tre_nr_id = $1 
-		AND set.set_dt_data = CURRENT_DATE 
-		AND set.deleted_at IS NULL 
-		LIMIT 1
-	`
-	err = tx.QueryRow(ctx, sqlBusca, treNrId).Scan(&setNrID)
-
-	if errors.Is(err, pgx.ErrNoRows) {
-		sqlInsertSessao := `
-			INSERT INTO treino.set_sessao_treino (tre_nr_id, set_dt_data, set_tm_hora_inicio)
-			VALUES ($1, CURRENT_DATE, CURRENT_TIME) 
-			RETURNING set_nr_id
-		`
-		err = tx.QueryRow(ctx, sqlInsertSessao, treNrId).Scan(&setNrID)
-		if err != nil {
-			return fmt.Errorf("erro ao criar sessão automática: %w", err)
-		}
-	} else if err != nil {
-		return fmt.Errorf("erro ao buscar sessão existente: %w", err)
-	}
-
-	serie.SetNrID = setNrID
 	sqlInsertSerie := `
 		INSERT INTO treino.sex_serie_executada 
 		(set_nr_id, fit_nr_id, sex_nr_serie_numero, sex_nr_repeticoes_realizadas, sex_nr_peso_utilizado)

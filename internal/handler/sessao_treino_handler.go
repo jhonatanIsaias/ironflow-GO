@@ -20,6 +20,14 @@ func NovoSessaoTreinoHandler(repo ISessaoTreinoRepository) *SessaoTreinoHandler 
 func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
 	var sessao model.SessaoTreino
 
+	treNrIdParam := c.Param("treNrId")
+
+	treNrId, err := strconv.Atoi(treNrIdParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
+		return
+	}
+
 	if err := c.ShouldBindJSON(&sessao); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "Corpo da requisição inválido"})
 		return
@@ -34,7 +42,7 @@ func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId é obrigatório"})
 		return
 	}
-	err := h.SessaoTreinoRepository.Salvar(c, &sessao)
+	err = h.SessaoTreinoRepository.Salvar(c, &sessao,treNrId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar a sessão de treino"})
 		return

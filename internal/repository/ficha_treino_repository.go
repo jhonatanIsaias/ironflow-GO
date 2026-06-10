@@ -79,7 +79,7 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 
 func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int,usuTxID string) (*model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.created_at, f.updated_at
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
@@ -110,11 +110,11 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int,usuTx
 
 func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTxNome string,usuTxId string) ([]model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.created_at, f.updated_at
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
-	AND f.deleted_at IS NULL AND f.tre_nr_id = $1 AND (e.exe_tx_nome <> '' AND e.exe_tx_nome ILIKE $2)
+	WHERE f.deleted_at IS NULL AND f.tre_nr_id = $1 AND (e.exe_tx_nome <> '' AND e.exe_tx_nome ILIKE $2)
 	AND t.usu_tx_id = $3
 	ORDER BY f.fit_nr_ordem
 	`

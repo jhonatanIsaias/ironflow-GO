@@ -70,7 +70,7 @@ func main() {
 		protected.POST("/fichas", fichaTreinoHandler.SalvarFichaTreino)
 		protected.PUT("/fichas", fichaTreinoHandler.EditarFichaTreino)
 		protected.GET("/fichas/:fitNrId", fichaTreinoHandler.BuscarPorID)
-		protected.GET("/fichas", fichaTreinoHandler.BuscarTodos)
+		protected.GET("/fichas/treino/:treNrId", fichaTreinoHandler.BuscarTodos)
 		protected.DELETE("/fichas/:fitNrId", fichaTreinoHandler.DeletarPorID)
 
 		// SESSÕES

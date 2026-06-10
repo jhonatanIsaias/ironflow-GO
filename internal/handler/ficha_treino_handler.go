@@ -153,7 +153,7 @@ func (fit *FichaTreinoHandler) BuscarTodos(c *gin.Context){
 	fichas,err := fit.FichaTreinoRepository.BuscarTodos(c,treNrId,exeTxNome,usuTxId);
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar treinos"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro":err.Error()})
 		return
 	}
 

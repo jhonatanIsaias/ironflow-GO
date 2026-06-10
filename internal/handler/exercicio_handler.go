@@ -98,10 +98,10 @@ func (h *ExercicioHandler) BuscarPorID(c *gin.Context) {
 func (h *ExercicioHandler) BuscarTodos(c *gin.Context) {
 
 	usuTxId := c.GetString("usuTxId")
-	
+
 	exercicios, err := h.ExercicioRepository.BuscarTodos(c,usuTxId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar exercícios"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, exercicios)

@@ -79,7 +79,7 @@ func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio,usu
 
 func (r *ExercicioRepository) BuscarTodos(ctx context.Context,usuTxID string)([]model.Exercicio,error){
 	sql := `
-		SELECT exe_nr_id, exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento, created_at, updated_at
+		SELECT exe_nr_id, exe_tx_nome, usu_tx_id, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento, created_at, updated_at
 		FROM treino.exe_exercicio
 		WHERE (usu_tx_id IS NULL OR usu_Tx_id = $1 ) AND deleted_at IS NULL
 	`
@@ -98,8 +98,8 @@ func (r *ExercicioRepository) BuscarTodos(ctx context.Context,usuTxID string)([]
 		err := rows.Scan(
 			&e.ExeNrID,
 			&e.ExeTxNome,
+			
 			&e.ExeTxGrupoMuscular,
-			&e.UsuTxID,
 			&e.ExeTxGrupoMuscularSinergista,
 			&e.ExeTxTipoEquipamento,
 			&e.CreatedAt,

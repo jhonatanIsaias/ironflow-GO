@@ -18,6 +18,7 @@ func NovoSessaoTreinoHandler(repo ISessaoTreinoRepository) *SessaoTreinoHandler 
 }
 
 func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
+
 	var sessao model.SessaoTreino
 
 	treNrIdParam := c.Param("treNrId")
@@ -27,17 +28,7 @@ func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
 		return
 	}
-
-	if err := c.ShouldBindJSON(&sessao); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erro": "Corpo da requisição inválido"})
-		return
-	}
-
-	if sessao.SetNrID != 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"erro": "Não envie o ID para criar uma nova sessão de treino"})
-		return
-	}
-
+	
 	if sessao.TreNrID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId é obrigatório"})
 		return

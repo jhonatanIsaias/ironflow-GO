@@ -76,6 +76,7 @@ func main() {
 		// SESSÕES
 		protected.GET("/sessoes", sessaoTreinoHandler.BuscarPorFiltros)
 		protected.POST("/sessoes/:treNrId",sessaoTreinoHandler.CriarSessaoTreino)
+	
 
 		// SÉRIES
 		protected.POST("/series/:treNrId", serieExecutadaHandler.SalvarSerieExecutada)

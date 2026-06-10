@@ -28,11 +28,6 @@ func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
 		return
 	}
-	
-	if sessao.TreNrID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId é obrigatório"})
-		return
-	}
 	err = h.SessaoTreinoRepository.Salvar(c, &sessao,treNrId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar a sessão de treino"})

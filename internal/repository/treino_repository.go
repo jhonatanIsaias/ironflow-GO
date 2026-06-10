@@ -141,8 +141,8 @@ func (r *TreinoRepository) DeletarE_Fichas(ctx context.Context, id int, usuTxId 
 		return errors.New("Não é possível deletar: Treino inexistente")
 	}
 
-	sqlFichas := `UPDATE treino.fit_ficha_treino SET deleted_at = NOW() WHERE tre_nr_id = $1 AND usu_tx_id = $2 AND deleted_at IS NULL`
-	_, err = tx.Exec(ctx, sqlFichas, id, usuTxId)
+	sqlFichas := `UPDATE treino.fit_ficha_treino SET deleted_at = NOW() WHERE tre_nr_id = $1 AND deleted_at IS NULL`
+	_, err = tx.Exec(ctx, sqlFichas, id)
 	
 	if err != nil {
 		return err 

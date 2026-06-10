@@ -124,7 +124,7 @@ func (h *TreinoHandler) DeletarPorID(c *gin.Context) {
 	err = h.TreinoRepository.DeletarE_Fichas(c, id, usuTxId)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Treino não encontrado"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": err.Error()})
 		return
 	}
 

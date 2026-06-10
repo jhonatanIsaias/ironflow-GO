@@ -21,7 +21,7 @@ func NovoEvolucaoRepository(db *pgxpool.Pool) *EvolucaoRepository {
 
 func (r *EvolucaoRepository) Salvar(ctx context.Context, e *model.Evolucao, usuTxID string) error {
 	sql := `
-        INSERT INTO usuario.evo_evolucao (
+        INSERT INTO treino.evo_evolucao (
 			usu_tx_id, evo_dt_data, evo_nr_peso, evo_nr_altura,
 			evo_nr_ombro, evo_nr_busto, evo_nr_abdomen, evo_nr_cintura,
 			evo_nr_quadril, evo_nr_braco_direito, evo_nr_braco_esquerdo,
@@ -60,7 +60,7 @@ func (r *EvolucaoRepository) Salvar(ctx context.Context, e *model.Evolucao, usuT
 
 func (r *EvolucaoRepository) Editar(ctx context.Context, e *model.Evolucao, usuTxID string) error {
 	sql := `
-		UPDATE usuario.evo_evolucao
+		UPDATE treino.evo_evolucao
 		SET evo_dt_data = $1, evo_nr_peso = $2, evo_nr_altura = $3,
 			evo_nr_ombro = $4, evo_nr_busto = $5, evo_nr_abdomen = $6,
 			evo_nr_cintura = $7, evo_nr_quadril = $8, evo_nr_braco_direito = $9,
@@ -116,9 +116,9 @@ func (r *EvolucaoRepository) BuscarPorID(ctx context.Context, evoNrID int, usuTx
 			evo_nr_antebraco_direito, evo_nr_antebraco_esquerdo,
 			evo_nr_coxa_direita, evo_nr_coxa_esquerda,
 			evo_nr_panturrilha_direita, evo_nr_panturrilha_esquerda
-        FROM usuario.evo_evolucao
+        FROM treino.evo_evolucao
         WHERE evo_nr_id = $1
-		AND usu_nr_id = $2
+		AND usu_tx_id = $2
 		AND deleted_at IS NULL
     `
 
@@ -160,8 +160,8 @@ func (r *EvolucaoRepository) BuscarTodos(ctx context.Context, usuTxID string) ([
 			evo_nr_antebraco_direito, evo_nr_antebraco_esquerdo,
 			evo_nr_coxa_direita, evo_nr_coxa_esquerda,
 			evo_nr_panturrilha_direita, evo_nr_panturrilha_esquerda
-        FROM usuario.evo_evolucao
-        WHERE usu_nr_id = $1 AND deleted_at IS NULL
+        FROM treino.evo_evolucao
+        WHERE usu_tx_id = $1 AND deleted_at IS NULL
 		ORDER BY evo_dt_data DESC
     `
 
@@ -209,14 +209,14 @@ func (r *EvolucaoRepository) BuscarTodos(ctx context.Context, usuTxID string) ([
 
 func (r *EvolucaoRepository) BuscarMaisRecente(ctx context.Context, usuTxID string) (*model.Evolucao, error) {
 	sql := `
-        SELECT evo_nr_id, usu_nr_id, evo_dt_data, evo_nr_peso, evo_nr_altura,
+        SELECT evo_nr_id, usu_tx_id, evo_dt_data, evo_nr_peso, evo_nr_altura,
 			evo_nr_ombro, evo_nr_busto, evo_nr_abdomen, evo_nr_cintura,
 			evo_nr_quadril, evo_nr_braco_direito, evo_nr_braco_esquerdo,
 			evo_nr_antebraco_direito, evo_nr_antebraco_esquerdo,
 			evo_nr_coxa_direita, evo_nr_coxa_esquerda,
 			evo_nr_panturrilha_direita, evo_nr_panturrilha_esquerda
-        FROM usuario.evo_evolucao
-        WHERE usu_nr_id = $1 AND deleted_at IS NULL
+        FROM treino.evo_evolucao
+        WHERE usu_tx_id = $1 AND deleted_at IS NULL
 		ORDER BY evo_dt_data DESC
 		LIMIT 1
     `

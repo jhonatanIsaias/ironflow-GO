@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"ironflow/internal/model"
 	"net/http"
 	"strconv"
@@ -114,6 +115,7 @@ func (h *EvolucaoHandler) BuscarMaisRecente(c *gin.Context) {
 
 	evolucao, err := h.EvolucaoRepository.BuscarMaisRecente(c, usuTxID)
 	if err != nil {
+		fmt.Printf("Erro ao buscar evolução mais recente: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": err.Error()})
 		return
 	}

@@ -11,11 +11,11 @@ import (
 )
 
 type IExercicioRepository interface {
-	Salvar(ctx context.Context, e *model.Exercicio) error
-	Editar(ctx context.Context, e *model.Exercicio) error
-	BuscarTodos(ctx context.Context) ([]model.Exercicio, error)
-	BuscarPorID(ctx context.Context, exeNrId int) (*model.Exercicio, error)
-	Deletar(ctx context.Context, id int) error
+	Salvar(ctx context.Context, e *model.Exercicio,usuTxID string) error
+	Editar(ctx context.Context, e *model.Exercicio,usuTxID string) error
+	BuscarTodos(ctx context.Context,usuTxID string) ([]model.Exercicio, error)
+	BuscarPorID(ctx context.Context, exeNrId int,usuTxID string) (*model.Exercicio, error)
+	Deletar(ctx context.Context, id int,usuTxID string) error
 }
 
 type ExercicioHandler struct {
@@ -39,7 +39,9 @@ func (h *ExercicioHandler) CriarExercicio(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "Não envie o ID para criar um novo exercício"})
 		return
 	}
-	err := h.ExercicioRepository.Salvar(c, &e)
+	usuTxId := c.GetString("usuTxId")
+	
+	err := h.ExercicioRepository.Salvar(c, &e,usuTxId)
 	if err != nil {
 		
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar o exercício"})
@@ -61,7 +63,9 @@ func (h *ExercicioHandler) EditarExercicio(c *gin.Context) {
 		return
 	}
 
-	err := h.ExercicioRepository.Editar(c, &e)
+	usuTxId := c.GetString("usuTxId")
+
+	err := h.ExercicioRepository.Editar(c, &e,usuTxId)
 	if err != nil {
 		fmt.Printf("Erro ao editar exercício: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao editar o exercício"})
@@ -80,7 +84,9 @@ func (h *ExercicioHandler) BuscarPorID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID inválido. Deve ser um número."})
 		return
 	}
-	exercicio, err := h.ExercicioRepository.BuscarPorID(c, id);
+
+	usuTxId := c.GetString("usuTxId")
+	exercicio, err := h.ExercicioRepository.BuscarPorID(c, id, usuTxId);
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Exercício não encontrado"})
@@ -90,7 +96,10 @@ func (h *ExercicioHandler) BuscarPorID(c *gin.Context) {
 }
 
 func (h *ExercicioHandler) BuscarTodos(c *gin.Context) {
-	exercicios, err := h.ExercicioRepository.BuscarTodos(c)
+
+	usuTxId := c.GetString("usuTxId")
+	
+	exercicios, err := h.ExercicioRepository.BuscarTodos(c,usuTxId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar exercícios"})
 		return
@@ -107,7 +116,9 @@ func (h *ExercicioHandler) DeletarPorID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "ID inválido. Deve ser um número."})
 		return
 	}
-	err = h.ExercicioRepository.Deletar(c, id);
+
+	usuTxId := c.GetString("usuTxId")
+	err = h.ExercicioRepository.Deletar(c, id, usuTxId);
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Exercício não encontrado"})

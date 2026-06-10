@@ -19,16 +19,17 @@ func NovoExercicioRepository(db *pgxpool.Pool) *ExercicioRepository {
 }
 
 
-func (r *ExercicioRepository) Salvar (ctx context.Context, e *model.Exercicio) error{
+func (r *ExercicioRepository) Salvar (ctx context.Context, e *model.Exercicio, usuTxID string) error{
 	sql := `
-		INSERT INTO treino.exe_exercicio (exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento)
-		VALUES ($1, $2, $3, $4) RETURNING exe_nr_id, created_at, updated_at`
+		INSERT INTO treino.exe_exercicio (exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento,usu_tx_id)
+		VALUES ($1, $2, $3, $4, $5) RETURNING exe_nr_id, created_at, updated_at`
 
 		err := r.DB.QueryRow(ctx, sql,
 		e.ExeTxNome,
 		e.ExeTxGrupoMuscular,
 		e.ExeTxGrupoMuscularSinergista,
 		e.ExeTxTipoEquipamento,
+		usuTxID,
 	).Scan(
 		   &e.ExeNrID,
 		   &e.CreatedAt,
@@ -39,7 +40,7 @@ func (r *ExercicioRepository) Salvar (ctx context.Context, e *model.Exercicio) e
 
 }
 
-func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio) error {
+func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio,usuTxID string) error {
 	
 	sql := 
 	`
@@ -49,7 +50,7 @@ func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio) er
 		exe_tx_grupo_muscular_sinegista = $3,
 		exe_tx_tipo_equipamento = $4,
 		updated_at = NOW()
-		WHERE exe_nr_id = $5 AND deleted_at IS NULL
+		WHERE exe_nr_id = $5 AND deleted_at IS NULL AND usu_tx_id = $6
 		RETURNING created_at, updated_at
 	`
 	 err := r.DB.QueryRow(ctx, sql,
@@ -58,6 +59,7 @@ func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio) er
 		e.ExeTxGrupoMuscularSinergista,
 		e.ExeTxTipoEquipamento,
 		e.ExeNrID,
+		usuTxID,
 	).
 	Scan(
 		&e.CreatedAt,
@@ -75,14 +77,14 @@ func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio) er
 	return nil
 }
 
-func (r *ExercicioRepository) BuscarTodos(ctx context.Context)([]model.Exercicio,error){
+func (r *ExercicioRepository) BuscarTodos(ctx context.Context,usuTxID string)([]model.Exercicio,error){
 	sql := `
 		SELECT exe_nr_id, exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento, created_at, updated_at
 		FROM treino.exe_exercicio
-		WHERE deleted_at IS NULL
+		WHERE (usu_tx_id IS NULL OR usu_Tx_id = $1 ) AND deleted_at IS NULL
 	`
 
-	rows, err := r.DB.Query(ctx, sql)
+	rows, err := r.DB.Query(ctx, sql, usuTxID)
 	if err != nil {
 		return nil, err
 	}
@@ -92,10 +94,12 @@ func (r *ExercicioRepository) BuscarTodos(ctx context.Context)([]model.Exercicio
 	var exercicios []model.Exercicio
 	for rows.Next() {
 		var e model.Exercicio
+	
 		err := rows.Scan(
 			&e.ExeNrID,
 			&e.ExeTxNome,
 			&e.ExeTxGrupoMuscular,
+			&e.UsuTxID,
 			&e.ExeTxGrupoMuscularSinergista,
 			&e.ExeTxTipoEquipamento,
 			&e.CreatedAt,
@@ -104,6 +108,7 @@ func (r *ExercicioRepository) BuscarTodos(ctx context.Context)([]model.Exercicio
 		if err != nil {
 			return nil, err
 		}
+		e.IsCustom = e.UsuTxID != nil
 		exercicios = append(exercicios, e)
 	}
 
@@ -113,16 +118,16 @@ func (r *ExercicioRepository) BuscarTodos(ctx context.Context)([]model.Exercicio
 	return exercicios, nil
 }
 
-func (r *ExercicioRepository) BuscarPorID(ctx context.Context, exeNrId int) (*model.Exercicio, error) {
+func (r *ExercicioRepository) BuscarPorID(ctx context.Context, exeNrId int, usuTxID string) (*model.Exercicio, error) {
 
 	sql := `
 		SELECT exe_nr_id, exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento, created_at, updated_at
 		FROM treino.exe_exercicio
-		WHERE exe_nr_id = $1 AND deleted_at IS NULL
+		WHERE exe_nr_id = $1 AND ( usu_tx_id IS NULL OR usu_tx_id = $2) AND deleted_at IS NULL
 	`
 	var e model.Exercicio
 
-	err := r.DB.QueryRow(ctx, sql, exeNrId).Scan(
+	err := r.DB.QueryRow(ctx, sql, exeNrId,usuTxID).Scan(
 		&e.ExeNrID,
 		&e.ExeTxNome,
 		&e.ExeTxGrupoMuscular,
@@ -142,15 +147,15 @@ func (r *ExercicioRepository) BuscarPorID(ctx context.Context, exeNrId int) (*mo
 }
 
 
-func (r *ExercicioRepository) Deletar(ctx context.Context, id int) error {
+func (r *ExercicioRepository) Deletar(ctx context.Context, id int, usuTxID string) error {
 	
-	sql := `UPDATE treino.exe_exercicio SET deleted_at = NOW() WHERE exe_nr_id = $1`
+	sql := `UPDATE treino.exe_exercicio SET deleted_at = NOW() WHERE exe_nr_id = $1 AND usu_tx_id = $2`
 	
-	comando, err := r.DB.Exec(ctx, sql, id)
+	comando, err := r.DB.Exec(ctx, sql, id, usuTxID)
 	if err != nil {
 		return err
 	}
-	
+
 	if comando.RowsAffected() == 0 {
 		return errors.New("Não é possível deletar: Exercício inexistente")
 	}

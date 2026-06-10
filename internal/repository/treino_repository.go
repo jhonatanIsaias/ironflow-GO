@@ -21,10 +21,10 @@ func NovoTreinoRepository(db *pgxpool.Pool) *TreinoRepository {
 
 func (r *TreinoRepository) Salvar(ctx context.Context, t *model.Treino, usuTxId string) error {
 	sql := `
-        INSERT INTO treino.tre_treino (tre_tx_nome, usu_tx_id)
+        INSERT INTO treino.tre_treino (tre_tx_nome, usu_tx_id, tre_tx_descricao)
         VALUES ($1, $2) RETURNING tre_nr_id,created_at, updated_at`
 
-	err := r.DB.QueryRow(ctx, sql, t.TreTxNome, usuTxId).Scan(
+	err := r.DB.QueryRow(ctx, sql, t.TreTxNome, usuTxId,t.TreTxDescricao).Scan(
 		&t.TreNrID,
 		&t.CreatedAt,
 		&t.UpdatedAt,
@@ -35,7 +35,7 @@ func (r *TreinoRepository) Salvar(ctx context.Context, t *model.Treino, usuTxId 
 func (r *TreinoRepository) Editar(ctx context.Context, t *model.Treino, usuTxId string) error {
 	sql := `
 		UPDATE treino.tre_treino
-		SET tre_tx_nome = $1, updated_at = NOW()
+		SET tre_tx_nome = $1, updated_at = NOW(),tre_tx_descricao = $4
 		WHERE tre_nr_id = $2 
 		AND usu_tx_id = $3
 		AND deleted_at IS NULL
@@ -45,6 +45,7 @@ func (r *TreinoRepository) Editar(ctx context.Context, t *model.Treino, usuTxId 
 		t.TreTxNome,
 		t.TreNrID,
 		usuTxId,
+		t.TreTxDescricao,
 	).Scan(
 		&t.CreatedAt,
 		&t.UpdatedAt,
@@ -64,7 +65,7 @@ func (r *TreinoRepository) Editar(ctx context.Context, t *model.Treino, usuTxId 
 
 func (r *TreinoRepository) BuscarTodos(ctx context.Context,treTxNome string, usuTxId string) ([]model.Treino, error) {
 	sql := `
-        SELECT tre_nr_id, tre_tx_nome
+        SELECT tre_nr_id, tre_tx_nome,tre_tx_descricao
         FROM treino.tre_treino
         WHERE deleted_at IS NULL AND (tre_tx_nome <> '' AND tre_tx_nome ILIKE $1) AND usu_tx_id = $2
     `
@@ -81,6 +82,7 @@ func (r *TreinoRepository) BuscarTodos(ctx context.Context,treTxNome string, usu
 		err := rows.Scan(
 			&t.TreNrID,
 			&t.TreTxNome,
+			&t.TreTxDescricao,
 		)
 		if err != nil {
 			return nil, err
@@ -97,7 +99,7 @@ func (r *TreinoRepository) BuscarTodos(ctx context.Context,treTxNome string, usu
 
 func (r *TreinoRepository) BuscarPorID(ctx context.Context, treNrID int, usuTxId string) (*model.Treino, error) {
 	sql := `
-        SELECT tre_nr_id, tre_tx_nome
+        SELECT tre_nr_id, tre_tx_nome,tre_tx_descricao
         FROM treino.tre_treino
         WHERE tre_nr_id = $1 
 		AND deleted_at IS NULL 
@@ -108,6 +110,7 @@ func (r *TreinoRepository) BuscarPorID(ctx context.Context, treNrID int, usuTxId
 	err := r.DB.QueryRow(ctx, sql, treNrID, usuTxId).Scan(
 		&t.TreNrID,
 		&t.TreTxNome,
+		&t.TreTxDescricao,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, errors.New("Treino não encontrado")

@@ -19,7 +19,7 @@ func GenerateJWT(usuTxID uuid.UUID, email string) (string, error) {
 	claims := jwt.MapClaims{
 		"usuTxId": usuTxID,
 		"usuTxEmail":email,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+		"exp":     time.Now().Add(time.Hour * 15).Unix(),
 		"iat":     time.Now().Unix(),                     
 	}
 

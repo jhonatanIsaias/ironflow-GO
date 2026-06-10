@@ -32,6 +32,7 @@ func main() {
 	fichaTrinoRepository := repository.NovoFichaTreinoRepository(database.DB)
 	sessaoTreinoRepository := repository.NovoSessaoTreinoRepository(database.DB)
 	serieExecutadaRepository := repository.NovoSerieExecutadaRepository(database.DB)
+	evolucaoRepository := repository.NovoEvolucaoRepository(database.DB)
 
 	usuarioHandler := handler.NovoUsuarioHandler(usuarioRepository)
 	treinoHandler := handler.NovoTreinoHandler(treinoRepository)
@@ -39,6 +40,7 @@ func main() {
 	fichaTreinoHandler := handler.NovoFichaTreinoHandler(fichaTrinoRepository, treinoRepository)
 	sessaoTreinoHandler := handler.NovoSessaoTreinoHandler(sessaoTreinoRepository)
 	serieExecutadaHandler := handler.NovoSerieExecutadaHandler(serieExecutadaRepository)
+	evolucaoHandler := handler.NovoEvolucaoHandler(evolucaoRepository)
 
 	router := gin.Default()
 
@@ -80,7 +82,14 @@ func main() {
 		protected.GET("/series/sessao/:setNrId", serieExecutadaHandler.BuscarPorSessao)
 		protected.DELETE("/series/:sexNrId", serieExecutadaHandler.DeletarSerieExecutada)
 
-        
+		// EVOLUÇÕES
+		protected.POST("/evolucoes", evolucaoHandler.CriarEvolucao)
+		protected.PUT("/evolucoes", evolucaoHandler.EditarEvolucao)
+		protected.GET("/evolucoes/:evoNrID", evolucaoHandler.BuscarPorID)
+		protected.GET("/evolucoes/recente", evolucaoHandler.BuscarMaisRecente)
+		protected.GET("/evolucoes", evolucaoHandler.BuscarTodos)
+		protected.DELETE("/evolucoes/:evoNrID", evolucaoHandler.DeletarPorID)
+
 	}
 
 	router.Run(":8080")

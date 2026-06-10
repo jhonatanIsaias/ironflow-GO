@@ -5,7 +5,7 @@ import "time"
 type Evolucao struct {
 	BaseEntity
 	EvoNrID                  int       `json:"evoNrID" db:"evo_nr_id"`
-	UsuNrID                  int       `json:"usuNrID" db:"usu_nr_id"`
+	UsuTxID                  string    `json:"usuNrID" db:"usu_tx_id"`
 	EvoDtData                time.Time `json:"evoDtData" db:"evo_dt_data"`
 	EvoNrPeso                *float64  `json:"evoNrPeso" db:"evo_nr_peso"`
 	EvoNrAltura              *float64  `json:"evoNrAltura" db:"evo_nr_altura"`

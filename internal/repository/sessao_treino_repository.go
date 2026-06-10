@@ -19,12 +19,12 @@ func NovoSessaoTreinoRepository(db *pgxpool.Pool) *SessaoTreinoRepository {
 	return &SessaoTreinoRepository{DB: db}
 }
 
-func (r *SessaoTreinoRepository) Salvar(ctx context.Context, sessao *model.SessaoTreino,treNrId int) error {
-
+func (r *SessaoTreinoRepository) Salvar(ctx context.Context, sessao *model.SessaoTreino, treNrId int) error {
+	
 	sql := `
 		INSERT INTO treino.set_sessao_treino (tre_nr_id, set_dt_data, set_tm_hora_inicio)
 		VALUES ($1, CURRENT_DATE, CURRENT_TIME) RETURNING set_nr_id, created_at, updated_at`
-	
+
 	err := r.DB.QueryRow(ctx, sql,
 		treNrId,
 	).Scan(
@@ -43,7 +43,7 @@ func (r *SessaoTreinoRepository) Salvar(ctx context.Context, sessao *model.Sessa
 func (r *SessaoTreinoRepository) BuscarPorFiltros(
 	ctx context.Context,
 	treNrId int,
-	usuTxId string, 
+	usuTxId string,
 	dataInicio time.Time,
 	dataFim time.Time,
 	horaInicio time.Time,
@@ -57,11 +57,11 @@ func (r *SessaoTreinoRepository) BuscarPorFiltros(
 		AND tre.usu_tx_id = $2
 	`
 
-	args := []any{treNrId,usuTxId}
+	args := []any{treNrId, usuTxId}
 
 	if !dataInicio.IsZero() {
 		args = append(args, dataInicio)
-	
+
 		sql += fmt.Sprintf(" AND set_dt_data >= $%d", len(args))
 	}
 
@@ -81,7 +81,6 @@ func (r *SessaoTreinoRepository) BuscarPorFiltros(
 	}
 
 	sql += " ORDER BY set_dt_data DESC, set_tm_hora_inicio DESC"
-
 
 	rows, err := r.DB.Query(ctx, sql, args...)
 	if err != nil {
@@ -121,12 +120,12 @@ func (r *SessaoTreinoRepository) ObterSessaoHoje(ctx context.Context, treNrId in
 		WHERE set.tre_nr_id = $1 
 		  AND set.set_dt_data = CURRENT_DATE 
 		  AND set.deleted_at IS NULL
-		  AND tre.usu_tx_id = @2
+		  AND tre.usu_tx_id = $2
 		LIMIT 1
 	`
 
 	var setNrID int
-	err := r.DB.QueryRow(ctx, sql, treNrId,usuTxId).Scan(&setNrID)
+	err := r.DB.QueryRow(ctx, sql, treNrId, usuTxId).Scan(&setNrID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return 0, false, nil

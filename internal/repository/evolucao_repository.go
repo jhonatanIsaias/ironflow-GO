@@ -243,7 +243,7 @@ func (r *EvolucaoRepository) BuscarMaisRecente(ctx context.Context, usuTxID stri
 		&e.EvoNrPanturrilhaEsquerda,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, errors.New("Nenhuma evolução encontrada")
+		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}

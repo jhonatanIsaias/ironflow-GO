@@ -20,14 +20,13 @@ func NovoExercicioRepository(db *pgxpool.Pool) *ExercicioRepository {
 
 func (r *ExercicioRepository) Salvar(ctx context.Context, e *model.Exercicio, usuTxID string) error {
 	sql := `
-		INSERT INTO treino.exe_exercicio (exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento,usu_tx_id)
-		VALUES ($1, $2, $3, $4, $5) RETURNING exe_nr_id, created_at, updated_at`
+		INSERT INTO treino.exe_exercicio (exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista,usu_tx_id)
+		VALUES ($1, $2, $3, $4) RETURNING exe_nr_id, created_at, updated_at`
 
 	err := r.DB.QueryRow(ctx, sql,
 		e.ExeTxNome,
 		e.ExeTxGrupoMuscular,
 		e.ExeTxGrupoMuscularSinergista,
-		e.ExeTxTipoEquipamento,
 		usuTxID,
 	).Scan(
 		&e.ExeNrID,
@@ -47,16 +46,14 @@ func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio, us
 		SET exe_tx_nome = $1, 
 		exe_tx_grupo_muscular = $2, 
 		exe_tx_grupo_muscular_sinegista = $3,
-		exe_tx_tipo_equipamento = $4,
 		updated_at = NOW()
-		WHERE exe_nr_id = $5 AND deleted_at IS NULL AND usu_tx_id = $6
+		WHERE exe_nr_id = $4 AND deleted_at IS NULL AND usu_tx_id = $5
 		RETURNING created_at, updated_at
 	`
 	err := r.DB.QueryRow(ctx, sql,
 		e.ExeTxNome,
 		e.ExeTxGrupoMuscular,
 		e.ExeTxGrupoMuscularSinergista,
-		e.ExeTxTipoEquipamento,
 		e.ExeNrID,
 		usuTxID,
 	).
@@ -78,7 +75,7 @@ func (r *ExercicioRepository) Editar(ctx context.Context, e *model.Exercicio, us
 
 func (r *ExercicioRepository) BuscarTodos(ctx context.Context, usuTxID string) ([]model.Exercicio, error) {
 	sql := `
-        SELECT exe_nr_id, exe_tx_nome, exe_tx_grupo_muscular, usu_tx_id, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento, created_at, updated_at
+        SELECT exe_nr_id, exe_tx_nome, exe_tx_grupo_muscular, usu_tx_id, exe_tx_grupo_muscular_sinegista, created_at, updated_at
         FROM treino.exe_exercicio
         WHERE (usu_tx_id IS NULL OR usu_tx_id = $1::UUID) AND deleted_at IS NULL
     `
@@ -99,7 +96,6 @@ func (r *ExercicioRepository) BuscarTodos(ctx context.Context, usuTxID string) (
 			&e.ExeTxGrupoMuscular,
 			&e.UsuTxID,
 			&e.ExeTxGrupoMuscularSinergista,
-			&e.ExeTxTipoEquipamento,
 			&e.CreatedAt,
 			&e.UpdatedAt,
 		)
@@ -120,7 +116,7 @@ func (r *ExercicioRepository) BuscarTodos(ctx context.Context, usuTxID string) (
 func (r *ExercicioRepository) BuscarPorID(ctx context.Context, exeNrId int, usuTxID string) (*model.Exercicio, error) {
 
 	sql := `
-		SELECT exe_nr_id, exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, exe_tx_tipo_equipamento, created_at, updated_at
+		SELECT exe_nr_id, exe_tx_nome, exe_tx_grupo_muscular, exe_tx_grupo_muscular_sinegista, created_at, updated_at
 		FROM treino.exe_exercicio
 		WHERE exe_nr_id = $1 AND ( usu_tx_id IS NULL OR usu_tx_id = $2) AND deleted_at IS NULL
 	`
@@ -131,7 +127,6 @@ func (r *ExercicioRepository) BuscarPorID(ctx context.Context, exeNrId int, usuT
 		&e.ExeTxNome,
 		&e.ExeTxGrupoMuscular,
 		&e.ExeTxGrupoMuscularSinergista,
-		&e.ExeTxTipoEquipamento,
 		&e.CreatedAt,
 		&e.UpdatedAt,
 	)

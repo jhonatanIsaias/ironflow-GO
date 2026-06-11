@@ -3,7 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
-	"ironflow/internal/model"	
+	"ironflow/internal/model"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -17,23 +18,24 @@ func NovoFichaTreinoRepository(db *pgxpool.Pool) *FichaTreinoRepository {
 }
 
 func (r *FichaTreinoRepository) Salvar(c context.Context, fichaTreino *model.FichaTreino) error {
-	
-	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_tx_meta_repeticoes, fit_nr_meta_peso, fit_nr_grupo)
-	VALUES ($1, $2, $3, $4, $5, $6,$7) RETURNING fit_nr_id,created_at,updated_at`
 
-	err := r.DB.QueryRow(c, sql, 
-		fichaTreino.TreNrID, 
-		fichaTreino.ExeNrID, 
-		fichaTreino.FitNrOrdem, 
-		fichaTreino.FitNrMetaSeries, 
-		fichaTreino.FitTxMetaRepeticoes, 
+	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_tx_meta_repeticoes, fit_nr_meta_peso, fit_nr_grupo, exe_tx_tipo_equipamento)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING fit_nr_id,created_at,updated_at`
+
+	err := r.DB.QueryRow(c, sql,
+		fichaTreino.TreNrID,
+		fichaTreino.ExeNrID,
+		fichaTreino.FitNrOrdem,
+		fichaTreino.FitNrMetaSeries,
+		fichaTreino.FitTxMetaRepeticoes,
 		fichaTreino.FitNrMetaPeso,
 		fichaTreino.FitNrGrupo,
-		).Scan(
-			&fichaTreino.FitNrID,
-			&fichaTreino.CreatedAt,
-			&fichaTreino.UpdatedAt,
-		)
+		fichaTreino.ExeTxTipoEquipamento,
+	).Scan(
+		&fichaTreino.FitNrID,
+		&fichaTreino.CreatedAt,
+		&fichaTreino.UpdatedAt,
+	)
 	if err != nil {
 		return err
 	}
@@ -44,13 +46,14 @@ func (r *FichaTreinoRepository) Salvar(c context.Context, fichaTreino *model.Fic
 
 func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.FichaTreino) error {
 
-	sql := 
+	sql :=
 	`UPDATE treino.fit_ficha_treino 
 	SET fit_nr_ordem = $2,
 	fit_nr_meta_series = $3, 
 	fit_tx_meta_repeticoes = $4, 
 	fit_nr_meta_peso = $5, 
 	fit_nr_grupo = $6,
+	exe_tx_tipo_equipamento = $7,
 	updated_at = NOW() 
 	WHERE fit_nr_id = $1 and deleted_at IS NULL
 	RETURNING created_at,updated_at`
@@ -62,12 +65,13 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 		fichaTreino.FitTxMetaRepeticoes,
 		fichaTreino.FitNrMetaPeso,
 		fichaTreino.FitNrGrupo,
+		fichaTreino.ExeTxTipoEquipamento,
 	).Scan(
 		&fichaTreino.CreatedAt,
 		&fichaTreino.UpdatedAt,
 	)
 
-	if(errors.Is(err, pgx.ErrNoRows)) {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return errors.New("Não é possível editar: Ficha de treino inexistente")
 	}
 
@@ -77,9 +81,9 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 	return nil
 }
 
-func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int,usuTxID string) (*model.FichaTreinoResponse, error) {
+func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int, usuTxID string) (*model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.created_at, f.updated_at
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.exe_tx_tipo_equipamento, f.created_at, f.updated_at
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
@@ -88,7 +92,7 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int,usuTx
 	AND t.usu_tx_id = $2
 	`
 	var ficha model.FichaTreinoResponse
-	err := r.DB.QueryRow(c, sql, fitNrID,usuTxID).Scan(
+	err := r.DB.QueryRow(c, sql, fitNrID, usuTxID).Scan(
 		&ficha.FitNrID,
 		&ficha.TreNrID,
 		&ficha.ExeNrID,
@@ -98,6 +102,7 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int,usuTx
 		&ficha.FitTxMetaRepeticoes,
 		&ficha.FitNrMetaPeso,
 		&ficha.FitNrGrupo,
+		&ficha.ExeTxTipoEquipamento,
 		&ficha.CreatedAt,
 		&ficha.UpdatedAt,
 	)
@@ -107,10 +112,9 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int,usuTx
 	return &ficha, nil
 }
 
-
-func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTxNome string,usuTxId string) ([]model.FichaTreinoResponse, error) {
+func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int, exeTxNome string, usuTxId string) ([]model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.created_at, f.updated_at
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.exe_tx_tipo_equipamento, f.created_at, f.updated_at
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
@@ -118,7 +122,7 @@ func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTx
 	AND t.usu_tx_id = $3
 	ORDER BY f.fit_nr_ordem
 	`
-	rows, err := r.DB.Query(c, sql, treNrID, "%"+exeTxNome+"%",usuTxId)
+	rows, err := r.DB.Query(c, sql, treNrID, "%"+exeTxNome+"%", usuTxId)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +142,7 @@ func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int,exeTx
 			&ficha.FitTxMetaRepeticoes,
 			&ficha.FitNrMetaPeso,
 			&ficha.FitNrGrupo,
+			&ficha.ExeTxTipoEquipamento,
 			&ficha.CreatedAt,
 			&ficha.UpdatedAt,
 		); err != nil {
@@ -175,12 +180,12 @@ func (r *FichaTreinoRepository) Deletar(ctx context.Context, fitNrID int, usuTxI
 	if rowsAffected == 0 {
 		return errors.New("Não é possível deletar: Ficha de treino inexistente, já deletada ou sem permissão")
 	}
-	
+
 	return tx.Commit(ctx)
 
 }
 
-func (r *FichaTreinoRepository) ExisteExercicioNoTreino(ctx context.Context,treNrId int, exeNrId int) (bool,error){
+func (r *FichaTreinoRepository) ExisteExercicioNoTreino(ctx context.Context, treNrId int, exeNrId int) (bool, error) {
 
 	sql := `
 	SELECT EXISTS (
@@ -191,7 +196,7 @@ func (r *FichaTreinoRepository) ExisteExercicioNoTreino(ctx context.Context,treN
 	AND f.exe_nr_id = $2
 	)
   `
-  var exist bool
+	var exist bool
 
 	err := r.DB.QueryRow(ctx, sql, treNrId, exeNrId).Scan(
 		&exist,

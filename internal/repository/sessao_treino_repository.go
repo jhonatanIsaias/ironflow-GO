@@ -19,13 +19,27 @@ func NovoSessaoTreinoRepository(db *pgxpool.Pool) *SessaoTreinoRepository {
 	return &SessaoTreinoRepository{DB: db}
 }
 
-func (r *SessaoTreinoRepository) Salvar(ctx context.Context, sessao *model.SessaoTreino, treNrId int) error {
-	
+func (r *SessaoTreinoRepository) Salvar(ctx context.Context, sessao *model.SessaoTreino, treNrId int, usuTxId string) error {
+
+	validacaoSQL := `
+		SELECT tre_nr_id FROM treino.tre_treino
+		WHERE tre_nr_id = $1 AND usu_tx_id = $2 AND deleted_at IS NULL
+	`
+
+	var validacao int
+	err := r.DB.QueryRow(ctx, validacaoSQL, treNrId, usuTxId).Scan(&validacao)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errors.New("treino não encontrado ou não pertence ao usuário")
+		}
+		return err
+	}
+
 	sql := `
 		INSERT INTO treino.set_sessao_treino (tre_nr_id, set_dt_data, set_tm_hora_inicio)
 		VALUES ($1, CURRENT_DATE, CURRENT_TIME) RETURNING set_nr_id, created_at, updated_at`
 
-	err := r.DB.QueryRow(ctx, sql,
+	err = r.DB.QueryRow(ctx, sql,
 		treNrId,
 	).Scan(
 		&sessao.SetNrID,
@@ -53,12 +67,16 @@ func (r *SessaoTreinoRepository) BuscarPorFiltros(
 		SELECT set_nr_id, tre_nr_id, set_dt_data, set_tm_hora_inicio, tre.tre_tx_nome, created_at, updated_at
 		FROM treino.set_sessao_treino set
 		INNER JOIN treino.tre_treino tre ON set.tre_nr_id = tre.tre_nr_id
-		WHERE tre_nr_id = $1 AND deleted_at IS NULL
+		WHERE deleted_at IS NULL
 		AND tre.usu_tx_id = $2
 	`
 
-	args := []any{treNrId, usuTxId}
+	args := []any{usuTxId}
 
+	if treNrId > 0 {
+		args = append(args, treNrId)
+		sql += fmt.Sprintf(" AND tre.tre_nr_id >= $%d", len(args))
+	}
 	if !dataInicio.IsZero() {
 		args = append(args, dataInicio)
 
@@ -135,4 +153,30 @@ func (r *SessaoTreinoRepository) ObterSessaoHoje(ctx context.Context, treNrId in
 		return 0, false, err
 	}
 	return setNrID, true, nil
+}
+
+func (r *SessaoTreinoRepository) FinalizarSessao(ctx context.Context, setNrId int, usuTxId string) error {
+	sql := `
+		UPDATE treino.set_sessao_treino
+		SET set_dt_data_fim = CURRENT_DATE,
+		    set_tm_hora_fim = CURRENT_TIME,
+		    updated_at = CURRENT_TIMESTAMP
+		WHERE set_nr_id = $1
+		  AND deleted_at IS NULL
+		  AND tre_nr_id IN (
+		    SELECT tre_nr_id FROM treino.tre_treino 
+		    WHERE usu_tx_id = $2 AND deleted_at IS NULL
+		  )
+	`
+
+	result, err := r.DB.Exec(ctx, sql, setNrId, usuTxId)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("sessão não encontrada, já foi deletada ou não pertence ao usuário")
+	}
+
+	return nil
 }

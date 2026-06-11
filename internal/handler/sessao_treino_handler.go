@@ -28,9 +28,12 @@ func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
 		return
 	}
-	err = h.SessaoTreinoRepository.Salvar(c, &sessao,treNrId)
+
+	usuTxId := c.GetString("usuTxId")
+
+	err = h.SessaoTreinoRepository.Salvar(c, &sessao, treNrId, usuTxId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar a sessão de treino"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar a sessão de treino: " + err.Error()})
 		return
 	}
 
@@ -38,17 +41,18 @@ func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
 }
 
 func (h *SessaoTreinoHandler) BuscarPorFiltros(c *gin.Context) {
-	treNrIdParam := c.Query("treNrId")
-	if treNrIdParam == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId é obrigatório"})
-		return
-	}
+	
+	treNrIdQuery := c.Query("treNrId")
+	var treNrId int
+    var err error
 
-	treNrId, err := strconv.Atoi(treNrIdParam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
-		return
-	}
+	if treNrIdQuery != "" {
+        treNrId, err = strconv.Atoi(treNrIdQuery)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
+            return
+        }
+    }
 
 	usuTxId := c.GetString("usuTxId")
 
@@ -90,6 +94,27 @@ func (h *SessaoTreinoHandler) BuscarPorFiltros(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sessoes)
+}
+
+func (h *SessaoTreinoHandler) FinalizarSessao(c *gin.Context) {
+	
+	setNrIdParam := c.Param("setNrId")
+	
+	setNrId, err := strconv.Atoi(setNrIdParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "setNrId inválido"})
+		return
+	}
+
+	usuTxId := c.GetString("usuTxId")
+
+	err = h.SessaoTreinoRepository.FinalizarSessao(c, setNrId, usuTxId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao finalizar a sessão de treino: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"mensagem": "Sessão finalizada com sucesso"})
 }
 
 func parseOptionalDate(value string) (time.Time, error) {

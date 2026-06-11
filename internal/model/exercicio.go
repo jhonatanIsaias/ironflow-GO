@@ -9,6 +9,5 @@ type Exercicio struct {
 	UsuTxID                      *uuid.UUID `db:"usu_tx_id" json:"-"`
 	ExeTxGrupoMuscular           string     `json:"exeTxGrupoMuscular" db:"exe_tx_grupo_muscular"`
 	ExeTxGrupoMuscularSinergista string     `json:"exeTxGrupoMuscularSinergista" db:"exe_tx_grupo_muscular_sinegista"`
-	ExeTxTipoEquipamento         string     `json:"exeTxTipoEquipamento" db:"exe_tx_tipo_equipamento"`
 	IsCustom                     bool       `json:"isCustom"`
 }

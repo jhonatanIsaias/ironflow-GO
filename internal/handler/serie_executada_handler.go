@@ -19,7 +19,7 @@ type ISerieExecutadaRepository interface {
 }
 
 type ISessaoTreinoRepository interface {
-	Salvar(ctx context.Context, sessao *model.SessaoTreino, treNrId int) error
+	Salvar(ctx context.Context, sessao *model.SessaoTreino, treNrId int, usuTxId string) error
 	BuscarPorFiltros(
 		ctx context.Context,
 		treNrId int,
@@ -29,6 +29,7 @@ type ISessaoTreinoRepository interface {
 		horaInicio time.Time,
 		horaFim time.Time) ([]model.SessaoTreinoDetalhada, error)
 	ObterSessaoHoje(ctx context.Context, treNrId int, usuTxId string) (int, bool, error)
+	FinalizarSessao(ctx context.Context, setNrId int, usuTxId string) error
 }
 
 type SerieExecutadaHandler struct {

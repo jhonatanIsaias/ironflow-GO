@@ -16,5 +16,4 @@ type FichaTreino struct {
 type FichaTreinoResponse struct {
 	FichaTreino
 	ExeTxNome            string `json:"exeTxNome"`
-	ExeTxTipoEquipamento string `json:"exeTxTipoEquipamento"`
 }

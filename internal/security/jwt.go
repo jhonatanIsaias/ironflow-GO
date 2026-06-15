@@ -12,10 +12,7 @@ import (
 func GenerateJWT(usuTxID uuid.UUID, email string) (string, error) {
 	
 	secretKey := os.Getenv("JWT_SECRET")
-	if secretKey == "" {
-		secretKey = "ironflow-super-secret-dev-key"
-	}
-
+	
 	claims := jwt.MapClaims{
 		"usuTxId": usuTxID,
 		"usuTxEmail":email,

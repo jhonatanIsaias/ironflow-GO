@@ -26,7 +26,7 @@ func (r *SerieExecutadaRepository) RegistrarSerie(ctx context.Context, serie *mo
 
 	sqlInsertSerie := `
 		INSERT INTO treino.sex_serie_executada 
-		(set_nr_id, fit_nr_id, sex_nr_serie_numero, sex_tx_repeticoes_realizadas, sex_nr_peso_utilizado)
+		(set_nr_id, fit_nr_id, sex_nr_serie_numero, sex_tx_repeticoes_executadas, sex_nr_peso_utilizado)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING sex_nr_id, created_at, updated_at
 	`

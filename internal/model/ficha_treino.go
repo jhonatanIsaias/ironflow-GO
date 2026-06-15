@@ -5,7 +5,7 @@ type FichaTreino struct {
 	FitNrID              int     `json:"fitNrId" db:"fit_nr_id"`
 	TreNrID              int     `json:"treNrId" binding:"required" db:"tre_nr_id"`
 	ExeNrID              int     `json:"exeNrId" binding:"required" db:"exe_nr_id"`
-	ExeTxTipoEquipamento string  `json:"ExeTxTipoEquipamento" db:"exe_tx_tipo_equipamento"`
+	ExeTxTipoEquipamento *string  `json:"ExeTxTipoEquipamento" db:"exe_tx_tipo_equipamento"`
 	FitNrOrdem           int     `json:"fitNrOrdem" binding:"required" db:"fit_nr_ordem"`
 	FitNrMetaSeries      int     `json:"fitNrMetaSeries" db:"fit_nr_meta_series"`
 	FitTxMetaRepeticoes  string  `json:"fitTxMetaRepeticoes" binding:"required" db:"fit_tx_meta_repeticoes"`

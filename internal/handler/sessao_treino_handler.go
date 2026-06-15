@@ -119,15 +119,28 @@ func (h *SessaoTreinoHandler) FinalizarSessao(c *gin.Context) {
 
 func (h *SessaoTreinoHandler) VerificaSessaoAtivaHoje(c *gin.Context) {
 
-	usuTxId := c.GetString("usuTxId")
+	treNrIdParam := c.Param("treNrId")
 
-	sessoes, err := h.SessaoTreinoRepository.VerificaSessaoAtivaHoje(c, usuTxId)
+	treNrId, err := strconv.Atoi(treNrIdParam)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar sessões ativas de hoje: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
 		return
 	}
 
-	c.JSON(http.StatusOK, sessoes)
+	usuTxId := c.GetString("usuTxId")
+
+	sessao, err := h.SessaoTreinoRepository.VerificaSessaoAtivaHoje(c, treNrId, usuTxId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar sessão ativa de hoje: " + err.Error()})
+		return
+	}
+
+	if sessao == nil {
+		c.JSON(http.StatusOK, gin.H{"mensagem": "Nenhuma sessão ativa encontrada para este treino hoje"})
+		return
+	}
+
+	c.JSON(http.StatusOK, sessao)
 }
 
 func parseOptionalDate(value string) (time.Time, error) {

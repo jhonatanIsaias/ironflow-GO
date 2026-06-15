@@ -252,13 +252,13 @@ func (r *EvolucaoRepository) BuscarMaisRecente(ctx context.Context, usuTxID stri
 }
 
 func (r *EvolucaoRepository) Deletar(ctx context.Context, evoNrID int, usuTxD string) error {
-	sql := `UPDATE usuario.evo_evolucao SET deleted_at = NOW() WHERE evo_nr_id = $1 AND usu_tx_id = $2 AND deleted_at IS NULL`
+	sql := `UPDATE treino.evo_evolucao SET deleted_at = NOW() WHERE evo_nr_id = $1 AND usu_tx_id = $2::UUID AND deleted_at IS NULL`
 	comando, err := r.DB.Exec(ctx, sql, evoNrID, usuTxD)
 	if err != nil {
 		return err
 	}
 	if comando.RowsAffected() == 0 {
-		return errors.New("Não é possível deletar: Evolução inexistente")
+		return errors.New("Não é possível deletar: Evolução inexistente ou não pertence ao usuário")
 	}
 
 	return nil

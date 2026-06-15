@@ -180,3 +180,45 @@ func (r *SessaoTreinoRepository) FinalizarSessao(ctx context.Context, setNrId in
 
 	return nil
 }
+
+func (r *SessaoTreinoRepository) VerificaSessaoAtivaHoje(ctx context.Context, usuTxId string) ([]model.SessaoTreinoDetalhada, error) {
+	sql := `
+		SELECT set_nr_id, set.tre_nr_id, set_dt_data, set_tm_hora_inicio, tre.tre_tx_nome, set.created_at, set.updated_at
+		FROM treino.set_sessao_treino set
+		INNER JOIN treino.tre_treino tre ON set.tre_nr_id = tre.tre_nr_id
+		WHERE set.set_dt_data = CURRENT_DATE 
+		  AND set.set_dt_data_fim IS NULL
+		  AND set.deleted_at IS NULL
+		  AND tre.usu_tx_id = $1
+		ORDER BY set.set_tm_hora_inicio DESC
+	`
+
+	rows, err := r.DB.Query(ctx, sql, usuTxId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sessoes []model.SessaoTreinoDetalhada
+	for rows.Next() {
+		var sessao model.SessaoTreinoDetalhada
+		if err := rows.Scan(
+			&sessao.SetNrID,
+			&sessao.TreNrID,
+			&sessao.SetDtData,
+			&sessao.SetTmHoraInicio,
+			&sessao.TreTxNome,
+			&sessao.CreatedAt,
+			&sessao.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		sessoes = append(sessoes, sessao)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return sessoes, nil
+}

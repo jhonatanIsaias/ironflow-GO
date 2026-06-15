@@ -41,18 +41,18 @@ func (h *SessaoTreinoHandler) CriarSessaoTreino(c *gin.Context) {
 }
 
 func (h *SessaoTreinoHandler) BuscarPorFiltros(c *gin.Context) {
-	
+
 	treNrIdQuery := c.Query("treNrId")
 	var treNrId int
-    var err error
+	var err error
 
 	if treNrIdQuery != "" {
-        treNrId, err = strconv.Atoi(treNrIdQuery)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
-            return
-        }
-    }
+		treNrId, err = strconv.Atoi(treNrIdQuery)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"erro": "treNrId inválido"})
+			return
+		}
+	}
 
 	usuTxId := c.GetString("usuTxId")
 
@@ -97,9 +97,9 @@ func (h *SessaoTreinoHandler) BuscarPorFiltros(c *gin.Context) {
 }
 
 func (h *SessaoTreinoHandler) FinalizarSessao(c *gin.Context) {
-	
+
 	setNrIdParam := c.Param("setNrId")
-	
+
 	setNrId, err := strconv.Atoi(setNrIdParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "setNrId inválido"})
@@ -115,6 +115,19 @@ func (h *SessaoTreinoHandler) FinalizarSessao(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"mensagem": "Sessão finalizada com sucesso"})
+}
+
+func (h *SessaoTreinoHandler) VerificaSessaoAtivaHoje(c *gin.Context) {
+
+	usuTxId := c.GetString("usuTxId")
+
+	sessoes, err := h.SessaoTreinoRepository.VerificaSessaoAtivaHoje(c, usuTxId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar sessões ativas de hoje: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, sessoes)
 }
 
 func parseOptionalDate(value string) (time.Time, error) {

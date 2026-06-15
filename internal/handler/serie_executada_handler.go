@@ -30,6 +30,7 @@ type ISessaoTreinoRepository interface {
 		horaFim time.Time) ([]model.SessaoTreinoDetalhada, error)
 	ObterSessaoHoje(ctx context.Context, treNrId int, usuTxId string) (int, bool, error)
 	FinalizarSessao(ctx context.Context, setNrId int, usuTxId string) error
+	VerificaSessaoAtivaHoje(ctx context.Context, usuTxId string) ([]model.SessaoTreinoDetalhada, error)
 }
 
 type SerieExecutadaHandler struct {

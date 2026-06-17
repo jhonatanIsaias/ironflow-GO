@@ -45,7 +45,7 @@ func (h *SessaoTreinoHandler) BuscarPorFiltros(c *gin.Context) {
 	treNrIdQuery := c.Query("treNrId")
 	var treNrId int
 	var err error
-
+	
 	if treNrIdQuery != "" {
 		treNrId, err = strconv.Atoi(treNrIdQuery)
 		if err != nil {
@@ -89,7 +89,7 @@ func (h *SessaoTreinoHandler) BuscarPorFiltros(c *gin.Context) {
 		horaInicio,
 		horaFim)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao buscar sessões de treino"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": err.Error()})
 		return
 	}
 

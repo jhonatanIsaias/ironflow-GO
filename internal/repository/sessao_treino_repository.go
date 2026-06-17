@@ -64,7 +64,7 @@ func (r *SessaoTreinoRepository) BuscarPorFiltros(
 	horaFim time.Time) ([]model.SessaoTreinoDetalhada, error) {
 
 	sql := `
-		SELECT set_nr_id, tre.tre_nr_id, set_dt_data, set_tm_hora_inicio, tre.tre_tx_nome, set.created_at, set.updated_at
+		SELECT set_nr_id, tre.tre_nr_id, set_dt_data, set_tm_hora_inicio, set_tm_hora_fim, tre.tre_tx_nome, set.created_at, set.updated_at
 		FROM treino.set_sessao_treino set
 		INNER JOIN treino.tre_treino tre ON set.tre_nr_id = tre.tre_nr_id
 		WHERE set.deleted_at IS NULL
@@ -115,6 +115,7 @@ func (r *SessaoTreinoRepository) BuscarPorFiltros(
 			&sessao.TreNrID,
 			&sessao.SetDtData,
 			&sessao.SetTmHoraInicio,
+			&sessao.SetTmHoraFim,
 			&sessao.TreTxNome,
 			&sessao.CreatedAt,
 			&sessao.UpdatedAt,

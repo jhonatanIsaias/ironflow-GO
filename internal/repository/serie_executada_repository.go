@@ -136,7 +136,7 @@ func (r *SerieExecutadaRepository) BuscarPorSessao(ctx context.Context, setNrId 
 		JOIN treino.fit_ficha_treino f ON sex.fit_nr_id = f.fit_nr_id
 		JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
 		JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
-		WHERE sex.set_nr_id = $1 AND sex.deleted_at IS NULL AND tre.usu_tx_id = $2
+		WHERE sex.set_nr_id = $1 AND sex.deleted_at IS NULL AND t.usu_tx_id = $2
 		ORDER BY f.fit_nr_ordem ASC, sex.sex_nr_serie_numero ASC
 	`
 

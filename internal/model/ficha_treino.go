@@ -10,10 +10,27 @@ type FichaTreino struct {
 	FitNrMetaSeries      int     `json:"fitNrMetaSeries" db:"fit_nr_meta_series"`
 	FitTxMetaRepeticoes  string  `json:"fitTxMetaRepeticoes" binding:"required" db:"fit_tx_meta_repeticoes"`
 	FitNrMetaPeso        float64 `json:"fitNrMetaPeso" binding:"required" db:"fit_nr_meta_peso"`
-	FitNrGrupo           int     `json:"fitNrGrupo" db:"fit_nr_grupo"`
+	FitNrGrupo           *int     `json:"fitNrGrupo" db:"fit_nr_grupo"`
+	FitBlDropSet         bool     `json:"fitBlDropSet" db:"fit_bl_dropset"`
 }
 
 type FichaTreinoResponse struct {
 	FichaTreino
 	ExeTxNome            string `json:"exeTxNome"`
+}
+
+type FichaTreinoEstruturada struct {
+	
+	IsConjugado  bool `json:"isConjudado"`
+	FitNrMetaSeries      int     `json:"fitNrMetaSeries"`
+	Exercicios  []ExercicioTreino 
+}
+
+type ExercicioTreino struct {
+
+	FitNrID              int     `json:"fitNrId"`
+	ExeTxNome            string `json:"exeTxNome"`
+	FitNrMetaPeso        float64 `json:"fitNrMetaPeso"`
+	FitTxMetaRepeticoes  []string `json:"fitTxMetaRepeticoes"`
+	FitBlDropSet         bool     `json:"fitBlDropSet"`
 }

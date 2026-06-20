@@ -19,8 +19,8 @@ func NovoFichaTreinoRepository(db *pgxpool.Pool) *FichaTreinoRepository {
 
 func (r *FichaTreinoRepository) Salvar(c context.Context, fichaTreino *model.FichaTreino) error {
 
-	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_tx_meta_repeticoes, fit_nr_meta_peso, fit_nr_grupo, exe_tx_tipo_equipamento)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING fit_nr_id,created_at,updated_at`
+	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_tx_meta_repeticoes, fit_nr_meta_peso, fit_nr_grupo, exe_tx_tipo_equipamento, fit_bl_dropset)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING fit_nr_id,created_at,updated_at`
 
 	err := r.DB.QueryRow(c, sql,
 		fichaTreino.TreNrID,
@@ -31,6 +31,7 @@ func (r *FichaTreinoRepository) Salvar(c context.Context, fichaTreino *model.Fic
 		fichaTreino.FitNrMetaPeso,
 		fichaTreino.FitNrGrupo,
 		fichaTreino.ExeTxTipoEquipamento,
+		fichaTreino.FitBlDropSet,
 	).Scan(
 		&fichaTreino.FitNrID,
 		&fichaTreino.CreatedAt,
@@ -54,6 +55,7 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 	fit_nr_meta_peso = $5, 
 	fit_nr_grupo = $6,
 	exe_tx_tipo_equipamento = $7,
+	fit_bl_dropset = $8,
 	updated_at = NOW() 
 	WHERE fit_nr_id = $1 and deleted_at IS NULL
 	RETURNING created_at,updated_at`
@@ -66,6 +68,7 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 		fichaTreino.FitNrMetaPeso,
 		fichaTreino.FitNrGrupo,
 		fichaTreino.ExeTxTipoEquipamento,
+		fichaTreino.FitBlDropSet,
 	).Scan(
 		&fichaTreino.CreatedAt,
 		&fichaTreino.UpdatedAt,
@@ -83,7 +86,7 @@ func (r *FichaTreinoRepository) Editar(c context.Context, fichaTreino *model.Fic
 
 func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int, usuTxID string) (*model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.exe_tx_tipo_equipamento, f.created_at, f.updated_at
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.exe_tx_tipo_equipamento, fit_bl_dropset, f.created_at, f.updated_at
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
@@ -103,6 +106,7 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int, usuT
 		&ficha.FitNrMetaPeso,
 		&ficha.FitNrGrupo,
 		&ficha.ExeTxTipoEquipamento,
+		&ficha.FitBlDropSet,
 		&ficha.CreatedAt,
 		&ficha.UpdatedAt,
 	)
@@ -114,7 +118,7 @@ func (r *FichaTreinoRepository) BuscarPorID(c context.Context, fitNrID int, usuT
 
 func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int, exeTxNome string, usuTxId string) ([]model.FichaTreinoResponse, error) {
 	sql := `
-	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.exe_tx_tipo_equipamento, f.created_at, f.updated_at
+	SELECT f.fit_nr_id, f.tre_nr_id, f.exe_nr_id, e.exe_tx_nome, f.fit_nr_ordem, f.fit_nr_meta_series, f.fit_tx_meta_repeticoes, f.fit_nr_meta_peso, f.fit_nr_grupo, f.exe_tx_tipo_equipamento, fit_bl_dropset, f.created_at, f.updated_at
 	FROM treino.fit_ficha_treino f
 	JOIN treino.exe_exercicio e ON f.exe_nr_id = e.exe_nr_id
 	JOIN treino.tre_treino t ON f.tre_nr_id = t.tre_nr_id
@@ -143,6 +147,7 @@ func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int, exeT
 			&ficha.FitNrMetaPeso,
 			&ficha.FitNrGrupo,
 			&ficha.ExeTxTipoEquipamento,
+			&ficha.FitBlDropSet,
 			&ficha.CreatedAt,
 			&ficha.UpdatedAt,
 		); err != nil {

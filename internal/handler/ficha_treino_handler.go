@@ -6,6 +6,7 @@ import (
 	"ironflow/internal/model"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -157,7 +158,9 @@ func (fit *FichaTreinoHandler) BuscarTodos(c *gin.Context){
 		return
 	}
 
-	c.JSON(http.StatusOK,fichas)
+	fichaEstruturada := fit.montarFichaTreinoEstruturada(fichas)
+
+	c.JSON(http.StatusOK,fichaEstruturada)
 
 }
 
@@ -182,4 +185,72 @@ func (fit *FichaTreinoHandler) DeletarPorID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Ficha deletada com sucesso"})
+}
+
+func (fit *FichaTreinoHandler) montarFichaTreinoEstruturada(fichas []model.FichaTreinoResponse) []model.FichaTreinoEstruturada {
+	
+	 var fichaEstruturada []model.FichaTreinoEstruturada
+
+	 mapGrupos := make(map[int]int) 
+
+	for _, f := range fichas {
+		repsArray := extrairRepeticoes(f.FitTxMetaRepeticoes, f.FitNrMetaSeries)
+
+		exDetail := model.ExercicioTreino{
+			FitNrID:         f.FitNrID,
+			ExeTxNome:            f.ExeTxNome,
+			FitNrMetaPeso:        f.FitNrMetaPeso,
+			FitTxMetaRepeticoes: repsArray,
+			FitBlDropSet: f.FitBlDropSet,
+		}
+
+		if f.FitNrGrupo != nil {
+			
+			if idx, exists := mapGrupos[*f.FitNrGrupo]; exists {
+			
+				fichaEstruturada[idx].Exercicios = append(fichaEstruturada[idx].Exercicios, exDetail)
+			} else {
+				
+				novaFicha := model.FichaTreinoEstruturada{
+					IsConjugado: true,
+					FitNrMetaSeries:   f.FitNrMetaSeries,
+					Exercicios: []model.ExercicioTreino{exDetail},
+				}
+				fichaEstruturada = append(fichaEstruturada, novaFicha)
+				
+				mapGrupos[*f.FitNrGrupo] = len(fichaEstruturada) - 1
+			}
+		} else {
+			
+			novoBloco := model.FichaTreinoEstruturada{
+				IsConjugado: false,
+				FitNrMetaSeries:   f.FitNrMetaSeries,
+				Exercicios:  []model.ExercicioTreino{exDetail},
+			}
+			fichaEstruturada = append(fichaEstruturada, novoBloco)
+		}
+	}
+
+	return fichaEstruturada
+
+}
+
+
+func extrairRepeticoes(repsRaw string, totalSeries int) []string {
+	
+	parts := strings.Split(repsRaw, "-")
+	
+	if len(parts) == totalSeries {
+		return parts
+	}
+
+	result := make([]string, totalSeries)
+	for i := 0; i < totalSeries; i++ {
+		if len(parts) > 0 {
+			result[i] = parts[0] 
+		} else {
+			result[i] = "0"
+		}
+	}
+	return result
 }

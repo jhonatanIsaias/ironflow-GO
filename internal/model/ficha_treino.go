@@ -9,7 +9,7 @@ type FichaTreino struct {
 	FitNrOrdem           int     `json:"fitNrOrdem" binding:"required" db:"fit_nr_ordem"`
 	FitNrMetaSeries      int     `json:"fitNrMetaSeries" db:"fit_nr_meta_series"`
 	FitTxMetaRepeticoes  string  `json:"fitTxMetaRepeticoes" binding:"required" db:"fit_tx_meta_repeticoes"`
-	FitNrMetaPeso        float64 `json:"fitNrMetaPeso" binding:"required" db:"fit_nr_meta_peso"`
+	FitNrMetaPeso        float64 `json:"fitNrMetaPeso" db:"fit_nr_meta_peso"`
 	FitNrGrupo           *int     `json:"fitNrGrupo" db:"fit_nr_grupo"`
 	FitBlDropSet         bool     `json:"fitBlDropSet" db:"fit_bl_dropset"`
 }
@@ -29,7 +29,8 @@ type FichaTreinoEstruturada struct {
 type ExercicioTreino struct {
 
 	FitNrID              int     `json:"fitNrId"`
-	ExeTxNome            string `json:"exeTxNome"`
+	ExeNrID              int     `json:"exeNrId"`
+	ExeTxNome            string  `json:"exeTxNome"`
 	FitNrMetaPeso        float64 `json:"fitNrMetaPeso"`
 	FitTxMetaRepeticoes  []string `json:"fitTxMetaRepeticoes"`
 	FitBlDropSet         bool     `json:"fitBlDropSet"`

@@ -194,10 +194,11 @@ func (fit *FichaTreinoHandler) montarFichaTreinoEstruturada(fichas []model.Ficha
 	 mapGrupos := make(map[int]int) 
 
 	for _, f := range fichas {
-		repsArray := extrairRepeticoes(f.FitTxMetaRepeticoes, f.FitNrMetaSeries)
+		repsArray := extrairRepeticoes(f.FitTxMetaRepeticoes, f.FitNrMetaSeries,f.FitBlDropSet)
 
 		exDetail := model.ExercicioTreino{
-			FitNrID:         f.FitNrID,
+			FitNrID:              f.FitNrID,
+			ExeNrID:              f.ExeNrID ,					
 			ExeTxNome:            f.ExeTxNome,
 			FitNrMetaPeso:        f.FitNrMetaPeso,
 			FitTxMetaRepeticoes: repsArray,
@@ -236,7 +237,11 @@ func (fit *FichaTreinoHandler) montarFichaTreinoEstruturada(fichas []model.Ficha
 }
 
 
-func extrairRepeticoes(repsRaw string, totalSeries int) []string {
+func extrairRepeticoes(repsRaw string, totalSeries int, isDropSet bool) []string {
+	
+	if isDropSet {
+		return []string {repsRaw}
+	} 
 	
 	parts := strings.Split(repsRaw, "-")
 	

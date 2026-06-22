@@ -48,6 +48,7 @@ func main() {
 
 	v1.POST("/login", usuarioHandler.Login)
 	v1.POST("/usuarios", usuarioHandler.SalvarUsuario)
+	v1.POST("/refresh", usuarioHandler.Refresh)
 
 	protected := v1.Group("/")
 	protected.Use(middleware.RequireAuth())

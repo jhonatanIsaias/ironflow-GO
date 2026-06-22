@@ -4,10 +4,11 @@ import (
 	"context"
 	"ironflow/internal/model"
 	"ironflow/internal/security"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	
 )
 
 type IUsuarioRepository interface {
@@ -15,6 +16,7 @@ type IUsuarioRepository interface {
 	Editar(ctx context.Context, usuario *model.Usuario) error
 	BuscarPorEmail(ctx context.Context, usuTxEmail string) (*model.Usuario, error)
 	BuscarPorID(ctx context.Context, usuTxId string) (*model.Usuario, error)
+	BuscarPorRefreshToken(ctx context.Context, refreshToken string) (*model.Usuario, error)
 }
 
 type UsuarioHandler struct {
@@ -33,8 +35,8 @@ func (h *UsuarioHandler) SalvarUsuario(c *gin.Context) {
 		return
 	}
 
-	usuTxSenhaHash,err := security.HashPassword(usuarioRequest.UsuTxSenha)
-	
+	usuTxSenhaHash, err := security.HashPassword(usuarioRequest.UsuTxSenha)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criptograr senha"})
 		return
@@ -44,8 +46,8 @@ func (h *UsuarioHandler) SalvarUsuario(c *gin.Context) {
 
 	err = h.usuarioRepository.Salvar(c, &usuarioRequest)
 	if err != nil {
-		 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		 return
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	var usuarioResponse model.UsuarioResponse
@@ -55,12 +57,11 @@ func (h *UsuarioHandler) SalvarUsuario(c *gin.Context) {
 	usuarioResponse.UpdatedAt = usuarioRequest.UpdatedAt
 
 	c.JSON(http.StatusCreated, usuarioResponse)
-	
 
 }
 
 func (h *UsuarioHandler) EditarUsuario(c *gin.Context) {
-	
+
 	var usuario model.UsuarioResponse
 
 	if err := c.ShouldBindJSON(&usuario); err != nil {
@@ -75,7 +76,7 @@ func (h *UsuarioHandler) EditarUsuario(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
 		return
 	}
-	err = h.usuarioRepository.Editar(c,usuarioToEdit)
+	err = h.usuarioRepository.Editar(c, usuarioToEdit)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao editar usuário"})
@@ -91,11 +92,11 @@ func (h *UsuarioHandler) EditarUsuario(c *gin.Context) {
 }
 
 func (h *UsuarioHandler) Login(c *gin.Context) {
-	
+
 	var JWTRequest model.JWTRequest
-	
+
 	if err := c.ShouldBindJSON(&JWTRequest); err != nil {
-		c.JSON(http.DefaultMaxHeaderBytes, gin.H{"error": "Corpo da requisição inválido"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Corpo da requisição inválido"})
 		return
 	}
 	usuario, err := h.usuarioRepository.BuscarPorEmail(c, JWTRequest.UsuTxEmail)
@@ -114,11 +115,78 @@ func (h *UsuarioHandler) Login(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao gerar JWT"})
 		return
-	}	
+	}
+
+	refreshToken, err := security.GerarRefreshToken()
+
+	if err != nil {
+		log.Print("error:" + err.Error())
+
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao gerar refresh token"})
+		return
+	}
+
+	refreshTokenExp := time.Now().Add(time.Hour * 24 * 7)
+
+	usuario.UsuTxRefreshToken = &refreshToken
+	usuario.UsuDtRefreshTokenExp = &refreshTokenExp
+
+	err = h.usuarioRepository.Editar(c, usuario)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao gerar refresh token"})
+		return
+	}
 
 	c.JSON(http.StatusOK, model.JWTResponse{
-		JWTToken: token,
-		UsuTxNome: usuario.UsuTxNome,
+		JWTToken:          token,
+		UsuTxRefreshToken: usuario.UsuTxRefreshToken,
+		UsuTxNome:         usuario.UsuTxNome,
+	})
+
+}
+
+func (h *UsuarioHandler) Refresh(c *gin.Context) {
+
+	var JWTRefresh model.JWTRefresh
+
+	if err := c.ShouldBindJSON(&JWTRefresh); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Corpo da requisição inválido"})
+		return
+	}
+
+	if JWTRefresh.UsuTxRefreshToken == nil || *JWTRefresh.UsuTxRefreshToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token não fornecido"})
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	usuario, err := h.usuarioRepository.BuscarPorRefreshToken(ctx, *JWTRefresh.UsuTxRefreshToken)
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "usuário não encontrado"})
+		return
+	}
+
+	refreshExpirado := usuario.UsuDtRefreshTokenExp.Before(time.Now())
+
+	if refreshExpirado {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "token expirado"})
+		return
+		
+	}
+
+	token, err := security.GenerateJWT(usuario.UsuTxId, usuario.UsuTxEmail)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao gerar JWT"})
+		return
+	}
+
+	c.JSON(http.StatusOK, model.JWTResponse{
+		JWTToken:          token,
+		UsuTxRefreshToken: usuario.UsuTxRefreshToken,
+		UsuTxNome:         usuario.UsuTxNome,
 	})
 
 }

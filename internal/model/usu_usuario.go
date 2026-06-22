@@ -1,6 +1,10 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Usuario struct {
 	BaseEntity
@@ -8,6 +12,8 @@ type Usuario struct {
 	UsuTxNome  string    `db:"usu_tx_nome"`
 	UsuTxEmail string    `db:"usu_tx_email"`
 	UsuTxSenha string    `db:"usu_tx_senha"`
+	UsuTxRefreshToken *string `db:"usu_tx_refresh_token"`
+	UsuDtRefreshTokenExp *time.Time `db:"usu_dt_refresh_token_exp"`
 }
 
 type UsuarioRequest struct {
@@ -32,4 +38,9 @@ type JWTRequest struct {
 type JWTResponse struct {
 	JWTToken   string    `json:"jwtToken"`
 	UsuTxNome  string    `json:"usuTxNome"`
+	UsuTxRefreshToken *string `json:"usuTxRefreshToken"`
+}
+
+type JWTRefresh struct {
+	UsuTxRefreshToken *string `json:"usuTxRefreshToken" binding:"required"`
 }

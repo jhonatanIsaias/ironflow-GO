@@ -35,6 +35,13 @@ func (h *UsuarioHandler) SalvarUsuario(c *gin.Context) {
 		return
 	}
 
+	if !ValidarSenhaForte(usuarioRequest.UsuTxSenha) {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": "A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.",
+        })
+        return
+    }
+
 	usuTxSenhaHash, err := security.HashPassword(usuarioRequest.UsuTxSenha)
 
 	if err != nil {
@@ -122,7 +129,7 @@ func (h *UsuarioHandler) Login(c *gin.Context) {
 	if err != nil {
 		log.Print("error:" + err.Error())
 
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao gerar refresh token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao gerar refresh token"})
 		return
 	}
 
@@ -134,7 +141,7 @@ func (h *UsuarioHandler) Login(c *gin.Context) {
 	err = h.usuarioRepository.Editar(c, usuario)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Falha ao gerar refresh token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao editar refresh token do usuário"})
 		return
 	}
 
@@ -180,6 +187,25 @@ func (h *UsuarioHandler) Refresh(c *gin.Context) {
 	token, err := security.GenerateJWT(usuario.UsuTxId, usuario.UsuTxEmail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao gerar JWT"})
+		return
+	}
+	refreshToken, err := security.GerarRefreshToken()
+
+	if err != nil {
+		log.Print("error:" + err.Error())
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao gerar refresh token"})
+		return
+	}
+	refreshTokenExp := time.Now().Add(time.Hour * 24 * 7)
+
+	usuario.UsuTxRefreshToken = &refreshToken
+	usuario.UsuDtRefreshTokenExp = &refreshTokenExp
+
+	err = h.usuarioRepository.Editar(ctx, usuario)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao editar refresh token do usuário"})
 		return
 	}
 

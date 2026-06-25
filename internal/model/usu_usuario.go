@@ -20,7 +20,7 @@ type UsuarioRequest struct {
 	BaseEntity
 	UsuTxNome  string `json:"usuTxNome" binding:"required"`
 	UsuTxEmail string `json:"usuTxEmail" binding:"required,email"`
-	UsuTxSenha string `json:"usuTxSenha" binding:"required min=8,max=12"`
+	UsuTxSenha string `json:"usuTxSenha" binding:"required,min=8,max=12"`
 }
 
 type UsuarioResponse struct {

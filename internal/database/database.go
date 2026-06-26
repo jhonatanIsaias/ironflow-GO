@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres" 
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
@@ -23,12 +24,21 @@ func Conectar() error {
 		return fmt.Errorf("a variável de ambiente DATABASE_URL não está configurada")
 	}
 
-	var err error
-	DB, err = pgxpool.New(context.Background(), databaseURL)
+	config, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		return fmt.Errorf("erro ao parsear a URL do banco: %v", err)
+	}
+
+	config.MaxConns = 15
+	config.MinConns = 2
+	config.MaxConnLifetime = time.Hour * 1
+	config.MaxConnIdleTime = time.Minute * 30
+
+	
+	DB, err = pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		return fmt.Errorf("erro ao criar o pool de conexão: %v", err)
 	}
-
 	err = DB.Ping(context.Background())
 	if err != nil {
 		return fmt.Errorf("erro ao fazer ping no banco de dados: %v", err)

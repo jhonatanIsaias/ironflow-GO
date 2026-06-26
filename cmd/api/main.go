@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -15,7 +16,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Aviso: Arquivo .env não encontrado. Certifique-se de que ele está na raiz do projeto.")
+		log.Println("Aviso: Arquivo .env não encontrado. Certifique-se de que ele está na raiz do projeto.")
 	}
 
 	err = database.Conectar()
@@ -42,7 +43,18 @@ func main() {
 	serieExecutadaHandler := handler.NovoSerieExecutadaHandler(serieExecutadaRepository)
 	evolucaoHandler := handler.NovoEvolucaoHandler(evolucaoRepository)
 
+
+	if os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	router := gin.Default()
+
+	router.MaxMultipartMemory = 8 << 20
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
 	v1 := router.Group("/api/v1")
 
@@ -97,5 +109,6 @@ func main() {
 
 	}
 
-	router.Run(":8080")
+	log.Printf("Iniciando servidor IronFlow na porta %s...", port)
+	router.Run(":" + port)
 }

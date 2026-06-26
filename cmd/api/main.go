@@ -58,9 +58,11 @@ func main() {
 
 	v1 := router.Group("/api/v1")
 
-	v1.POST("/login", usuarioHandler.Login)
-	v1.POST("/usuarios", usuarioHandler.SalvarUsuario)
-	v1.POST("/refresh", usuarioHandler.Refresh)
+	authLimiter := middleware.RateLimitAuth()
+
+	v1.POST("/login", authLimiter, usuarioHandler.Login)
+	v1.POST("/usuarios", authLimiter, usuarioHandler.SalvarUsuario)
+	v1.POST("/refresh", authLimiter, usuarioHandler.Refresh)
 
 	protected := v1.Group("/")
 	protected.Use(middleware.RequireAuth())

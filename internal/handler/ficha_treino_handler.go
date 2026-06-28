@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"fmt"
-	"io"
 	"ironflow/internal/model"
 	"log"
 	"net/http"
@@ -75,16 +74,9 @@ func (fit *FichaTreinoHandler) SalvarFichaTreino(c *gin.Context){
 		return
 	}
 
-	io.Copy(io.Discard, c.Request.Body)
-	
-	c.Request.Body.Close()
 
 	
-	c.JSON(http.StatusCreated, gin.H{
-		"status":   "success",
-		"mensagem": "Ficha salva com sucesso",
-		"data":     ficha,
-	})
+	c.JSON(http.StatusOK, gin.H{"ok": true})
 
 }
 

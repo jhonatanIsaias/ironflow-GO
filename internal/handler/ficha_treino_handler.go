@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"ironflow/internal/model"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -158,6 +159,7 @@ func (fit *FichaTreinoHandler) BuscarTodos(c *gin.Context){
 	fichas,err := fit.FichaTreinoRepository.BuscarTodos(c,treNrId,exeTxNome,usuTxId);
 
 	if err != nil {
+		log.Fatal(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"erro":err.Error()})
 		return
 	}

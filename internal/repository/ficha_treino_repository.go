@@ -22,16 +22,18 @@ func (r *FichaTreinoRepository) Salvar(c context.Context, fichaTreino *model.Fic
 	sql := `INSERT INTO treino.fit_ficha_treino (tre_nr_id, exe_nr_id, fit_nr_ordem, fit_nr_meta_series, fit_tx_meta_repeticoes, fit_nr_meta_peso, fit_nr_grupo, exe_tx_tipo_equipamento, fit_bl_dropset)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING fit_nr_id,created_at,updated_at`
 
-	err := r.DB.QueryRow(c, sql,
-		fichaTreino.TreNrID,
-		fichaTreino.ExeNrID,
-		fichaTreino.FitNrOrdem,
-		fichaTreino.FitNrMetaSeries,
-		fichaTreino.FitTxMetaRepeticoes,
-		fichaTreino.FitNrMetaPeso,
-		fichaTreino.FitNrGrupo,
-		fichaTreino.ExeTxTipoEquipamento,
-		fichaTreino.FitBlDropSet,
+
+	  ctx := context.Background()
+	err := r.DB.QueryRow(ctx, sql,
+		&fichaTreino.TreNrID,
+		&fichaTreino.ExeNrID,
+		&fichaTreino.FitNrOrdem,
+		&fichaTreino.FitNrMetaSeries,
+		&fichaTreino.FitTxMetaRepeticoes,
+		&fichaTreino.FitNrMetaPeso,
+		&fichaTreino.FitNrGrupo,
+		&fichaTreino.ExeTxTipoEquipamento,
+		&fichaTreino.FitBlDropSet,
 	).Scan(
 		&fichaTreino.FitNrID,
 		&fichaTreino.CreatedAt,

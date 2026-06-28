@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -112,5 +114,16 @@ func main() {
 	}
 
 	log.Printf("Iniciando servidor IronFlow na porta %s...", port)
-	router.Run(":" + port)
+	srv := &http.Server{
+		Addr:         ":" + port,
+		Handler:      router,
+		ReadTimeout:  5 * time.Second, 
+		WriteTimeout: 10 * time.Second, 
+		IdleTimeout:  120 * time.Second,
+	}
+
+	log.Printf("Iniciando servidor IronFlow na porta %s...", port)
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatalf("Falha no servidor: %v", err)
+	}
 }

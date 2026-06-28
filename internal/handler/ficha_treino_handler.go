@@ -73,7 +73,11 @@ func (fit *FichaTreinoHandler) SalvarFichaTreino(c *gin.Context){
 		return
 	}
 
-	c.JSON(http.StatusOK,ficha)
+	c.JSON(http.StatusCreated, gin.H{
+		"status":   "success",
+		"mensagem": "Ficha salva com sucesso",
+		"data":     ficha,
+	})
 
 }
 
@@ -160,6 +164,8 @@ func (fit *FichaTreinoHandler) BuscarTodos(c *gin.Context){
 
 	fichaEstruturada := fit.montarFichaTreinoEstruturada(fichas)
 
+	fmt.Printf("ficha: %+v\n", fichaEstruturada)
+
 	c.JSON(http.StatusOK,fichaEstruturada)
 
 }
@@ -189,7 +195,7 @@ func (fit *FichaTreinoHandler) DeletarPorID(c *gin.Context) {
 
 func (fit *FichaTreinoHandler) montarFichaTreinoEstruturada(fichas []model.FichaTreinoResponse) []model.FichaTreinoEstruturada {
 	
-	 var fichaEstruturada []model.FichaTreinoEstruturada
+	 fichaEstruturada := make([]model.FichaTreinoEstruturada, 0)
 
 	 mapGrupos := make(map[int]int) 
 
@@ -205,7 +211,7 @@ func (fit *FichaTreinoHandler) montarFichaTreinoEstruturada(fichas []model.Ficha
 			FitBlDropSet: f.FitBlDropSet,
 		}
 
-		if f.FitNrGrupo != nil {
+		if f.FitNrGrupo != nil && *f.FitNrGrupo > 0 {
 			
 			if idx, exists := mapGrupos[*f.FitNrGrupo]; exists {
 			

@@ -156,6 +156,10 @@ func (r *FichaTreinoRepository) BuscarTodos(c context.Context, treNrID int, exeT
 		fichas = append(fichas, ficha)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return fichas, nil
 
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -66,13 +67,17 @@ func (fit *FichaTreinoHandler) SalvarFichaTreino(c *gin.Context){
 		c.JSON(http.StatusConflict, gin.H{"erro": "Este exercício já está cadastrado neste treino"})
 		return
 	}
+	time.Sleep(100 * time.Millisecond)
 
+	
 	err = fit.FichaTreinoRepository.Salvar(c,&ficha)
 
 	if(err != nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar a ficha"})
 		return
 	}
+
+	fmt.Printf("ficha: %+v\n", ficha)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"status":   "success",

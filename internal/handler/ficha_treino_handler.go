@@ -67,7 +67,6 @@ func (fit *FichaTreinoHandler) SalvarFichaTreino(c *gin.Context){
 		return
 	}
 
-	
 	err = fit.FichaTreinoRepository.Salvar(c,&ficha)
 
 	if(err != nil){

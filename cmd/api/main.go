@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"ironflow/internal/database"
+	"ironflow/internal/database/redis"
 	"ironflow/internal/handler"
 	"ironflow/internal/middleware"
 	"ironflow/internal/repository"
@@ -29,8 +30,17 @@ func main() {
 
 	database.RodarMigrations()
 
+	err = redis.ConectarRedis();
+
+	if err != nil {
+		log.Fatalf("Falha crítica ao iniciar o redis: %v", err)
+	}
+
+	defer redis.FecharRedis()
+
+
 	usuarioRepository := repository.NovoUsuarioRepository(database.DB)
-	exercicioRepository := repository.NovoExercicioRepository(database.DB)
+	exercicioRepository := repository.NovoExercicioRepository(database.DB, redis.ClientRedis)
 	treinoRepository := repository.NovoTreinoRepository(database.DB)
 	fichaTrinoRepository := repository.NovoFichaTreinoRepository(database.DB)
 	sessaoTreinoRepository := repository.NovoSessaoTreinoRepository(database.DB)
@@ -48,7 +58,8 @@ func main() {
 
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
-	}
+	} 
+
 	router := gin.Default()
 
 	router.MaxMultipartMemory = 8 << 20
